@@ -1,0 +1,26 @@
+"""Example metric: a user metric group."""
+
+from __future__ import annotations
+
+from typing import ClassVar
+
+import numpy as np
+
+from backbone.core import Metric, MetricContext, register
+from backbone.core.interfaces import MetricOutput
+from backbone.core.specs import MetricDescriptor, MetricFormat
+
+
+@register("metric", name="example_metric", version="0.1.0", tags=["user"])
+class ExampleMetric(Metric):
+    """Share of bars with a return above 1%."""
+
+    descriptors: ClassVar[tuple[MetricDescriptor, ...]] = (
+        MetricDescriptor(key="example_metric_big_up_days", label="Bars above +1%", group="User",
+                         format=MetricFormat.PERCENT, higher_is_better=True),
+    )
+
+    def compute(self, ctx: MetricContext) -> dict[str, MetricOutput]:
+        """Return one value per descriptor key (``None`` when undefined)."""
+        r = ctx.returns[np.isfinite(ctx.returns)]
+        return {"example_metric_big_up_days": float((r > 0.01).mean()) if r.size else None}
