@@ -1,0 +1,29 @@
+# data and secrets
+data/
+.env
+*.pgpass
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.hypothesis/
+build/
+dist/
+
+# node
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,162 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "backbone"
+version = "0.1.0"
+description = "Local, extensible strategy research and backtesting platform."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.0",
+    "polars>=1.0",
+    "pyarrow>=15",
+    "pandas>=2.2",
+    "duckdb>=1.0",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "structlog>=24",
+    "exchange_calendars>=4.5",
+    "yfinance>=0.2.40",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+    "websockets>=12",
+    "typer>=0.12",
+    "PyYAML>=6",
+    "scipy>=1.12",
+    "statsmodels>=0.14",
+    "openpyxl>=3.1",
+    "watchfiles>=0.21",
+]
+
+[project.optional-dependencies]
+wrds = ["wrds>=3.2"]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "hypothesis>=6.100",
+    "mypy>=1.10",
+    "ruff>=0.5",
+    "import-linter>=2.0",
+    "pre-commit>=3.7",
+    "httpx>=0.27",
+    "pandas-stubs",
+    "types-PyYAML",
+    "empyrical-reloaded>=0.5",
+]
+
+[project.scripts]
+backbone = "backbone.cli:main"
+
+[project.entry-points."backbone.plugins"]
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+
+[tool.setuptools.package-data]
+backbone = ["py.typed", "templates/*.tmpl"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["backend", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "PL", "D"]
+ignore = [
+    "D105", "D107", "D203", "D213",
+    "PLR0913",  # plugin constructors and engines legitimately take many collaborators
+    "PLR2004",  # enforced by review; numeric literals in tests are fine
+    "RUF012",
+    "PLC0415",  # lazy imports: heavy optional libs (yfinance, wrds) and registry<->interfaces
+    "PLR0917",  # engine/context signatures mirror the domain; keyword use is encouraged
+    "N812",     # `from backbone.core import columns as C` is the project-wide convention
+    "UP046",    # explicit Generic[T] kept for readability of the registry
+    "UP047",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "PLR2004", "PLC0415", "PLR0911"]
+"user_plugins/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "backend"
+packages = ["backbone"]
+plugins = ["pydantic.mypy"]
+# NumPy's stubs type most reductions (sum, mean, ...) as returning Any, which would force a
+# cast on nearly every numerical return. We keep every other --strict check.
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["exchange_calendars.*", "yfinance.*", "wrds.*", "scipy.*", "statsmodels.*", "duckdb.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "live: hits the network or WRDS; opt-in with -m live",
+    "slow: slow tests",
+]
+filterwarnings = ["ignore::DeprecationWarning:yfinance.*"]
+
+[tool.coverage.run]
+source = ["backbone"]
+omit = ["backend/backbone/data/sources/wrds_*.py"]
+
+[tool.importlinter]
+root_package = "backbone"
+
+[[tool.importlinter.contracts]]
+name = "Layered architecture"
+type = "layers"
+layers = [
+    "backbone.api",
+    "backbone.services",
+    "backbone.analytics",
+    "backbone.engine",
+    "backbone.data",
+    "backbone.core",
+]
+ignore_imports = [
+    # plugin packages live inside layers but may only use core; checked by the next contract
+]
+
+[[tool.importlinter.contracts]]
+name = "Core depends on nothing"
+type = "forbidden"
+source_modules = ["backbone.core"]
+forbidden_modules = [
+    "backbone.data", "backbone.engine", "backbone.analytics", "backbone.portfolio",
+    "backbone.strategies", "backbone.services", "backbone.api",
+]
+
+[[tool.importlinter.contracts]]
+name = "Plugins depend only on core"
+type = "forbidden"
+source_modules = [
+    "backbone.strategies",
+    "backbone.portfolio",
+    "backbone.data.sources",
+    "backbone.engine.costs",
+    "backbone.engine.fills",
+    "backbone.analytics.metrics",
+    "backbone.analytics.charts",
+]
+forbidden_modules = ["backbone.api", "backbone.services"]
+
+[[tool.importlinter.contracts]]
+name = "Strategies are independent of other plugins"
+type = "forbidden"
+source_modules = ["backbone.strategies"]
+forbidden_modules = [
+    "backbone.portfolio", "backbone.data.sources", "backbone.engine",
+    "backbone.analytics",
+]
