@@ -1,0 +1,37 @@
+"""Lookahead truncation test on every shipped strategy, plus a negative control."""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from backbone.core import columns as C
+from backbone.core.interfaces import Strategy
+from backbone.core.registry import REGISTRIES, PluginKind
+from backbone.core.types import MarketData, TargetFrame
+from backbone.engine.lookahead import check_lookahead
+from tests.helpers import synthetic
+
+DATA = synthetic(instruments=("AAA", "BBB", "CCC", "DDD", "EEE", "FFF"))
+SHIPPED = [s for s in REGISTRIES[PluginKind.STRATEGY].specs() if s.origin == "builtin"]
+
+
+@pytest.mark.parametrize("spec", SHIPPED, ids=lambda s: s.name)
+def test_shipped_strategy_has_no_lookahead(spec):
+    report = check_lookahead(spec.create(), DATA)
+    assert report.passed, report.mismatches
+
+
+class Peeker(Strategy):
+    """Uses tomorrow's close: must be caught."""
+
+    def generate_targets(self, data: MarketData) -> TargetFrame:
+        close = data.panel(C.CLOSE)
+        tomorrow = np.vstack([close[1:], np.full((1, close.shape[1]), np.nan)])
+        return TargetFrame(data.timestamps, data.instruments, np.where(tomorrow > close, 1.0, 0.0))
+
+
+def test_peeking_strategy_is_detected():
+    report = check_lookahead(Peeker(), DATA)
+    assert not report.passed
+    assert report.mismatches

@@ -1,0 +1,131 @@
+"""Golden tests: frozen results for each reference strategy on fixture data.
+
+Any change to these numbers needs an explicit update::
+
+    BACKBONE_UPDATE_GOLDEN=1 pytest tests/golden
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pytest
+
+from backbone.analytics.service import AnalyticsService
+from backbone.core.registry import registry
+from backbone.core.run_config import PluginRef
+from backbone.engine.base import RunOptions
+from backbone.engine.pipeline import NamedOverlay, Pipeline
+from backbone.engine.vectorized import VectorizedEngine
+from tests.helpers import PPY, config, synthetic
+
+GOLDEN_DIR = Path(__file__).parent / "snapshots"
+UPDATE = os.environ.get("BACKBONE_UPDATE_GOLDEN") == "1"
+RTOL = 1e-8
+DATA = synthetic(instruments=("AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "MKT"))
+KEYS = (
+    "total_return",
+    "cagr",
+    "ann_vol",
+    "sharpe",
+    "max_drawdown",
+    "turnover_ann",
+    "n_trades",
+    "total_commission",
+)
+
+CASES: dict[str, dict[str, Any]] = {
+    "buy_and_hold": {"strategy": PluginRef(name="buy_and_hold")},
+    "sma_crossover": {
+        "strategy": PluginRef(name="sma_crossover", params={"fast": 20, "slow": 100})
+    },
+    "ts_momentum": {"strategy": PluginRef(name="ts_momentum", params={"lookback": 126, "skip": 5})},
+}
+
+
+def _extra_cases() -> dict[str, dict[str, Any]]:
+    """Reference strategies added in later phases (skipped if not registered yet)."""
+    extra = {
+        "xs_momentum": {
+            "strategy": PluginRef(name="xs_momentum"),
+            "constructor": PluginRef(name="quantile_long_short"),
+        },
+        "mean_reversion": {"strategy": PluginRef(name="mean_reversion")},
+        "pairs_trading": {"strategy": PluginRef(name="pairs_trading")},
+        "low_volatility": {
+            "strategy": PluginRef(name="low_volatility"),
+            "constructor": PluginRef(
+                name="quantile_long_short", params={"quantiles": 3, "long_only": True}
+            ),
+        },
+        "factor_portfolio": {
+            "strategy": PluginRef(name="factor_portfolio"),
+            "constructor": PluginRef(name="quantile_long_short", params={"quantiles": 3}),
+        },
+        "risk_parity_momentum": {
+            "strategy": PluginRef(name="ts_momentum", params={"lookback": 126}),
+            "constructor": PluginRef(name="risk_parity", params={"allow_short": True}),
+            "overlays": [
+                PluginRef(name="vol_target"),
+                PluginRef(name="max_position_weight", params={"max_weight": 0.3}),
+            ],
+        },
+        "futures_trend": {"strategy": PluginRef(name="futures_trend")},
+    }
+    return {
+        k: v
+        for k, v in extra.items()
+        if v["strategy"].name in registry("strategy")
+        and ("constructor" not in v or v["constructor"].name in registry("portfolio_constructor"))
+    }
+
+
+ALL_CASES = {**CASES, **_extra_cases()}
+
+
+def _run(case: dict[str, Any]) -> dict[str, float | None]:
+    strat_ref: PluginRef = case["strategy"]
+    strategy = registry("strategy").get(strat_ref.name).create(strat_ref.params)
+    constructor = None
+    if "constructor" in case:
+        ref = case["constructor"]
+        constructor = registry("portfolio_constructor").get(ref.name).create(ref.params)
+    overlays = tuple(
+        NamedOverlay(r.name, registry("overlay").get(r.name).create(r.params))
+        for r in case.get("overlays", [])
+    )
+    cost = registry("cost_model").get("bps_notional").create({"bps": 5})
+    engine = VectorizedEngine([cost])
+    data = DATA.select_instruments([i for i in DATA.instruments if i != "MKT"])
+    result = engine.run(
+        config(strat_ref.name, strat_ref.params),
+        DATA,
+        strategy,
+        Pipeline(constructor, overlays),
+        RunOptions(periods_per_year=PPY, benchmark_id="MKT", strategy_instruments=data.instruments),
+    )
+    metrics = AnalyticsService().compute(result)
+    return {k: metrics[k].value for k in KEYS}
+
+
+@pytest.mark.parametrize("name", sorted(ALL_CASES))
+def test_golden(name: str):
+    actual = _run(ALL_CASES[name])
+    path = GOLDEN_DIR / f"{name}.json"
+    if UPDATE or not path.exists():
+        if not UPDATE:
+            pytest.fail(f"No golden snapshot for {name}; run with BACKBONE_UPDATE_GOLDEN=1")
+        GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(actual, indent=2, sort_keys=True))
+        return
+    expected = json.loads(path.read_text())
+    for key in KEYS:
+        exp, act = expected[key], actual[key]
+        if exp is None or act is None:
+            assert exp == act, key
+        else:
+            assert np.isclose(act, exp, rtol=RTOL, atol=1e-10), (key, act, exp)
