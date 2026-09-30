@@ -1,0 +1,6102 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Backbone API",
+    "description": "Local strategy research and backtesting platform.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "description": "Liveness check.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Settings",
+        "description": "Non-secret settings.",
+        "operationId": "settings_api_v1_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/wrds-test": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Wrds Test",
+        "description": "Try to connect to WRDS with the configured user name and ``~/.pgpass``.",
+        "operationId": "wrds_test_api_v1_settings_wrds_test_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrdsTestOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "List Plugins",
+        "description": "All registered plugins.",
+        "operationId": "list_plugins_api_v1_plugins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PluginOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Plugins Api V1 Plugins Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/health": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Plugin Health",
+        "description": "Counts per kind and import failures.",
+        "operationId": "plugin_health_api_v1_plugins_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginHealthOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/{kind}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "List Kind",
+        "description": "Plugins of one kind.",
+        "operationId": "list_kind_api_v1_plugins__kind__get",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/PluginKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PluginOut"
+                  },
+                  "title": "Response List Kind Api V1 Plugins  Kind  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/{kind}/{name}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin",
+        "description": "One plugin, including the JSON Schema of its parameters and its capabilities.",
+        "operationId": "get_plugin_api_v1_plugins__kind___name__get",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/PluginKind"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/sources": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Sources",
+        "description": "Data sources and their datasets.",
+        "operationId": "sources_api_v1_data_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DataSourceOut"
+                  },
+                  "type": "array",
+                  "title": "Response Sources Api V1 Data Sources Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/catalog": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Catalog",
+        "description": "Datasets in the catalog.",
+        "operationId": "catalog_api_v1_data_catalog_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetRecord"
+                  },
+                  "title": "Response Catalog Api V1 Data Catalog Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/pull": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Pull",
+        "description": "Pull data into the cache as a background job.",
+        "operationId": "pull_api_v1_data_pull_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PullRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/import/preview": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Import Preview",
+        "description": "Upload a file (or point to a local path) and get a preview plus a guessed mapping.",
+        "operationId": "import_preview_api_v1_data_import_preview_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_preview_api_v1_data_import_preview_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/import": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Import File",
+        "description": "Import a previewed file with a (possibly corrected) mapping.",
+        "operationId": "import_file_api_v1_data_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Dataset",
+        "description": "One catalog record.",
+        "operationId": "dataset_api_v1_data_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Delete Dataset",
+        "description": "Delete a dataset and its files.",
+        "operationId": "delete_dataset_api_v1_data_datasets__dataset_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}/refresh": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Refresh",
+        "description": "Force a re-pull of a cached dataset.",
+        "operationId": "refresh_api_v1_data_datasets__dataset_id__refresh_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}/preview": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Dataset Preview",
+        "description": "First rows and per-instrument statistics.",
+        "operationId": "dataset_preview_api_v1_data_datasets__dataset_id__preview_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetPreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}/quality": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Dataset Quality",
+        "description": "Data quality report.",
+        "operationId": "dataset_quality_api_v1_data_datasets__dataset_id__quality_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/datasets/{dataset_id}/mapping": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Dataset Mapping",
+        "description": "Saved import mapping (for one-click re-import).",
+        "operationId": "dataset_mapping_api_v1_data_datasets__dataset_id__mapping_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportMapping"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/instruments/search": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Search Instruments",
+        "description": "Search instruments in a source.",
+        "operationId": "search_instruments_api_v1_data_instruments_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "yahoo",
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentOut"
+                  },
+                  "title": "Response Search Instruments Api V1 Data Instruments Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/validate": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Validate",
+        "description": "Check a configuration for compatibility problems.",
+        "operationId": "validate_api_v1_runs_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/lookahead-check": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Lookahead Check",
+        "description": "Run the truncation lookahead check on the configured strategy and data.",
+        "operationId": "lookahead_check_api_v1_runs_lookahead_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookaheadOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Create Run",
+        "description": "Queue a run as a background job and return its id immediately.",
+        "operationId": "create_run_api_v1_runs_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunLaunchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "List Runs",
+        "description": "Searchable, filterable run history (newest first).",
+        "operationId": "list_runs_api_v1_runs_get",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "experiment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Experiment"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "default": 500,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RunRecord"
+                  },
+                  "title": "Response List Runs Api V1 Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/experiments": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Experiments",
+        "description": "Experiments with run counts.",
+        "operationId": "experiments_api_v1_runs_experiments_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExperimentOut"
+                  },
+                  "type": "array",
+                  "title": "Response Experiments Api V1 Runs Experiments Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Run",
+        "description": "One run.",
+        "operationId": "get_run_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Update Run",
+        "description": "Rename, tag, annotate, move to an experiment or archive.",
+        "operationId": "update_run_api_v1_runs__run_id__patch",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Delete Run",
+        "description": "Delete a run and its results.",
+        "operationId": "delete_run_api_v1_runs__run_id__delete",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/clone": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Clone Run",
+        "description": "Clone a run with config edits; launches it unless ``run`` is false.",
+        "operationId": "clone_run_api_v1_runs__run_id__clone_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloneOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/cancel": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Cancel Run",
+        "description": "Cancel a queued or running run.",
+        "operationId": "cancel_run_api_v1_runs__run_id__cancel_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/JobOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Cancel Run Api V1 Runs  Run Id  Cancel Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/logs": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Logs",
+        "description": "Run log text.",
+        "operationId": "run_logs_api_v1_runs__run_id__logs_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/metrics": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Metrics",
+        "description": "Metrics (recomputed for ``[start, end]`` when a window is given).",
+        "operationId": "run_metrics_api_v1_runs__run_id__metrics_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/charts": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Charts",
+        "description": "Charts available for a single run.",
+        "operationId": "run_charts_api_v1_runs__run_id__charts_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChartInfoOut"
+                  },
+                  "title": "Response Run Charts Api V1 Runs  Run Id  Charts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/charts/{chart}": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Chart",
+        "description": "A chart spec (time series downsampled with LTTB unless ``max_points`` is large).",
+        "operationId": "run_chart_api_v1_runs__run_id__charts__chart__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "chart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chart"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "max_points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100000,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Points"
+            }
+          },
+          {
+            "name": "params",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Params"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartSpec"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/trades": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Trades",
+        "description": "Trades table (paged).",
+        "operationId": "run_trades_api_v1_runs__run_id__trades_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 500,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/positions": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Positions",
+        "description": "Positions at a bar (default: last).",
+        "operationId": "run_positions_api_v1_runs__run_id__positions_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/overlays": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Overlays",
+        "description": "Before/after statistics per overlay.",
+        "operationId": "run_overlays_api_v1_runs__run_id__overlays_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OverlayStatsOut"
+                  },
+                  "title": "Response Run Overlays Api V1 Runs  Run Id  Overlays Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/export": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Run Export",
+        "description": "Export as a CSV/Parquet zip or an HTML tearsheet.",
+        "operationId": "run_export_api_v1_runs__run_id__export_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare/charts": {
+      "get": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Compare Charts",
+        "description": "Charts available on the Compare page.",
+        "operationId": "compare_charts_api_v1_compare_charts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChartInfoOut"
+                  },
+                  "type": "array",
+                  "title": "Response Compare Charts Api V1 Compare Charts Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare/metrics": {
+      "post": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Compare Metrics",
+        "description": "Metrics table with best and worst per row, plus config-difference warnings.",
+        "operationId": "compare_metrics_api_v1_compare_metrics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareMetricsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare/charts/{chart}": {
+      "post": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Compare Chart",
+        "description": "A comparison chart across runs.",
+        "operationId": "compare_chart_api_v1_compare_charts__chart__post",
+        "parameters": [
+          {
+            "name": "chart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chart"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareChartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartSpec"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare/combine": {
+      "post": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Combine",
+        "description": "Combine runs into a fixed-weight portfolio and report the correlation benefit.",
+        "operationId": "combine_api_v1_compare_combine_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CombineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombineOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "List Jobs",
+        "description": "All jobs of this server session, newest first.",
+        "operationId": "list_jobs_api_v1_jobs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Jobs Api V1 Jobs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get Job",
+        "description": "One job with its log lines.",
+        "operationId": "get_job_api_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/cancel": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Cancel Job",
+        "description": "Cancel a job.",
+        "operationId": "cancel_job_api_v1_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/presets": {
+      "get": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "List Presets",
+        "description": "All presets.",
+        "operationId": "list_presets_api_v1_presets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Preset"
+                  },
+                  "type": "array",
+                  "title": "Response List Presets Api V1 Presets Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "Save Preset",
+        "description": "Create or replace a preset (the config is validated first).",
+        "operationId": "save_preset_api_v1_presets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preset"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/presets/{preset_id}": {
+      "get": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "Get Preset",
+        "description": "One preset.",
+        "operationId": "get_preset_api_v1_presets__preset_id__get",
+        "parameters": [
+          {
+            "name": "preset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Preset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preset"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "Update Preset",
+        "description": "Update a preset (renames allowed).",
+        "operationId": "update_preset_api_v1_presets__preset_id__put",
+        "parameters": [
+          {
+            "name": "preset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Preset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preset"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "presets"
+        ],
+        "summary": "Delete Preset",
+        "description": "Delete a preset.",
+        "operationId": "delete_preset_api_v1_presets__preset_id__delete",
+        "parameters": [
+          {
+            "name": "preset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Preset Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/sweep": {
+      "post": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Sweep",
+        "description": "Grid or random parameter sweep (background job).",
+        "operationId": "sweep_api_v1_research_sweep_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SweepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/walk-forward": {
+      "post": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Walk Forward",
+        "description": "Walk-forward optimization (background job).",
+        "operationId": "walk_forward_api_v1_research_walk_forward_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalkForwardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/monte-carlo": {
+      "post": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Monte Carlo",
+        "description": "Monte Carlo of a stored run (background job).",
+        "operationId": "monte_carlo_api_v1_research_monte_carlo_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MonteCarloRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/sensitivity": {
+      "post": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Sensitivity",
+        "description": "Cost, delay or capacity sensitivity (background job).",
+        "operationId": "sensitivity_api_v1_research_sensitivity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensitivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research": {
+      "get": {
+        "tags": [
+          "research"
+        ],
+        "summary": "List Research",
+        "description": "Stored research results, newest first.",
+        "operationId": "list_research_api_v1_research_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunRecord"
+                  },
+                  "type": "array",
+                  "title": "Response List Research Api V1 Research Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/regimes/{run_id}": {
+      "get": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Regimes",
+        "description": "Metrics by year, market trend and volatility regime for a run.",
+        "operationId": "regimes_api_v1_research_regimes__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchResultOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/unlock-test/{run_id}": {
+      "post": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Unlock Test",
+        "description": "Return the run's config with the test period unlocked (the unlock is recorded).",
+        "operationId": "unlock_test_api_v1_research_unlock_test__run_id__post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Unlock Test Api V1 Research Unlock Test  Run Id  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/{run_id}": {
+      "get": {
+        "tags": [
+          "research"
+        ],
+        "summary": "Get Research",
+        "description": "A stored research result.",
+        "operationId": "get_research_api_v1_research__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchResultOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Adjustment": {
+        "type": "string",
+        "enum": [
+          "raw",
+          "split",
+          "total_return"
+        ],
+        "title": "Adjustment",
+        "description": "Price adjustment convention of a series."
+      },
+      "Annotation": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "start": {
+            "title": "Start"
+          },
+          "end": {
+            "title": "End"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": ""
+          },
+          "role": {
+            "$ref": "#/components/schemas/SeriesRole",
+            "default": "negative"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "start",
+          "end",
+          "value",
+          "label",
+          "role"
+        ],
+        "title": "Annotation",
+        "description": "Shaded band or reference line."
+      },
+      "AnnotationKind": {
+        "type": "string",
+        "enum": [
+          "band",
+          "vline",
+          "hline"
+        ],
+        "title": "AnnotationKind",
+        "description": "Annotation kinds."
+      },
+      "Axis": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AxisType",
+            "default": "value"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricFormat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "name",
+          "format",
+          "categories",
+          "min",
+          "max"
+        ],
+        "title": "Axis",
+        "description": "Axis description."
+      },
+      "AxisType": {
+        "type": "string",
+        "enum": [
+          "time",
+          "value",
+          "log",
+          "category"
+        ],
+        "title": "AxisType",
+        "description": "Axis scale."
+      },
+      "BacktestConfig-Input": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "data": {
+            "$ref": "#/components/schemas/DataSpec"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/PluginRef"
+          },
+          "constructor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overlays": {
+            "items": {
+              "$ref": "#/components/schemas/PluginRef"
+            },
+            "type": "array",
+            "title": "Overlays"
+          },
+          "costs": {
+            "items": {
+              "$ref": "#/components/schemas/PluginRef"
+            },
+            "type": "array",
+            "title": "Costs"
+          },
+          "slippage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fill_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution": {
+            "$ref": "#/components/schemas/ExecutionSpec"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "factors": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factors",
+            "description": "'source:dataset' of daily factor returns for attribution"
+          },
+          "initial_capital": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Initial Capital",
+            "default": 1000000.0
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed",
+            "default": 42
+          },
+          "split": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchSplit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "experiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "strategy"
+        ],
+        "title": "BacktestConfig",
+        "description": "Full, serializable description of a run."
+      },
+      "BacktestConfig-Output": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "data": {
+            "$ref": "#/components/schemas/DataSpec"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/PluginRef"
+          },
+          "constructor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overlays": {
+            "items": {
+              "$ref": "#/components/schemas/PluginRef"
+            },
+            "type": "array",
+            "title": "Overlays"
+          },
+          "costs": {
+            "items": {
+              "$ref": "#/components/schemas/PluginRef"
+            },
+            "type": "array",
+            "title": "Costs"
+          },
+          "slippage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fill_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution": {
+            "$ref": "#/components/schemas/ExecutionSpec"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "factors": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factors",
+            "description": "'source:dataset' of daily factor returns for attribution"
+          },
+          "initial_capital": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Initial Capital",
+            "default": 1000000.0
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed",
+            "default": 42
+          },
+          "split": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchSplit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "experiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data",
+          "strategy"
+        ],
+        "title": "BacktestConfig",
+        "description": "Full, serializable description of a run."
+      },
+      "Body_import_preview_api_v1_data_import_preview_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "binary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "title": "Body_import_preview_api_v1_data_import_preview_post"
+      },
+      "ChartInfoOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scopes"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "applicable": {
+            "type": "boolean",
+            "title": "Applicable",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "title",
+          "group",
+          "scopes",
+          "description",
+          "applicable"
+        ],
+        "title": "ChartInfoOut",
+        "description": "A chart available for a scope."
+      },
+      "ChartSeries": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "data": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "role": {
+            "$ref": "#/components/schemas/SeriesRole",
+            "default": "series"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "render_as": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChartType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stack"
+          },
+          "y_axis": {
+            "type": "integer",
+            "title": "Y Axis",
+            "default": 0
+          },
+          "dashed": {
+            "type": "boolean",
+            "title": "Dashed",
+            "default": false
+          },
+          "symbol_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol Size"
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "data",
+          "role",
+          "run_id",
+          "render_as",
+          "stack",
+          "y_axis",
+          "dashed",
+          "symbol_size",
+          "labels"
+        ],
+        "title": "ChartSeries",
+        "description": "One data series.\n\n``data`` rows are ``[x, y]`` for line/area/bar/scatter (x may be an ISO timestamp or a\ncategory), ``[x, y, value]`` for heatmaps, ``[min, q1, median, q3, max]`` for box plots\nand a list of values for radar charts.\n\nAttributes:\n    name: Legend name.\n    data: Data rows.\n    role: Semantic role (drives colors and dashes).\n    run_id: Run this series belongs to (keeps colors consistent across charts).\n    render_as: Override the chart type for this series (e.g. ``scatter`` markers on a line).\n    stack: Stack group.\n    y_axis: Index of the y axis.\n    dashed: Draw dashed.\n    symbol_size: Marker size for scatter series."
+      },
+      "ChartSpec": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ChartType"
+          },
+          "x_axis": {
+            "$ref": "#/components/schemas/Axis"
+          },
+          "y_axes": {
+            "items": {
+              "$ref": "#/components/schemas/Axis"
+            },
+            "type": "array",
+            "title": "Y Axes"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/ChartSeries"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "annotations": {
+            "items": {
+              "$ref": "#/components/schemas/Annotation"
+            },
+            "type": "array",
+            "title": "Annotations"
+          },
+          "time_series": {
+            "type": "boolean",
+            "title": "Time Series",
+            "default": false
+          },
+          "options": {
+            "type": "object",
+            "title": "Options"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "type",
+          "x_axis",
+          "y_axes",
+          "series",
+          "annotations",
+          "time_series",
+          "options",
+          "warnings"
+        ],
+        "title": "ChartSpec",
+        "description": "Library-neutral chart description.\n\nAttributes:\n    id: Chart plugin name.\n    title: Title.\n    type: Default chart type for all series.\n    x_axis: X axis.\n    y_axes: One or more y axes.\n    series: Series.\n    annotations: Bands and reference lines.\n    time_series: Whether the chart participates in synchronized zoom and brushing.\n    options: Type-specific options (e.g. radar ``indicators``, heatmap ``categories``)."
+      },
+      "ChartType": {
+        "type": "string",
+        "enum": [
+          "line",
+          "area",
+          "stacked_area",
+          "bar",
+          "histogram",
+          "scatter",
+          "heatmap",
+          "boxplot",
+          "radar"
+        ],
+        "title": "ChartType",
+        "description": "Chart types the front end knows how to render."
+      },
+      "CloneOut": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/BacktestConfig-Output"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "run",
+          "job"
+        ],
+        "title": "CloneOut",
+        "description": "Result of cloning a run."
+      },
+      "CloneRequest": {
+        "properties": {
+          "changes": {
+            "type": "object",
+            "title": "Changes"
+          },
+          "run": {
+            "type": "boolean",
+            "title": "Run",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "CloneRequest",
+        "description": "Clone a run with edits deep-merged into its config."
+      },
+      "CombineOut": {
+        "properties": {
+          "metrics": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MetricValue"
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "weights": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Weights"
+          },
+          "diversification_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diversification Ratio"
+          },
+          "vol_reduction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vol Reduction"
+          },
+          "correlation": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Correlation"
+          },
+          "equity": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Equity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metrics",
+          "weights",
+          "diversification_ratio",
+          "vol_reduction",
+          "correlation",
+          "equity"
+        ],
+        "title": "CombineOut",
+        "description": "Combined portfolio of runs."
+      },
+      "CombineRequest": {
+        "properties": {
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Run Ids"
+          },
+          "weights": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_ids"
+        ],
+        "title": "CombineRequest",
+        "description": "Combine runs into a portfolio."
+      },
+      "CompareChartRequest": {
+        "properties": {
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Run Ids"
+          },
+          "align": {
+            "type": "boolean",
+            "title": "Align",
+            "default": false
+          },
+          "params": {
+            "type": "object",
+            "title": "Params"
+          },
+          "max_points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_ids"
+        ],
+        "title": "CompareChartRequest",
+        "description": "Comparison chart request."
+      },
+      "CompareMetricsOut": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/CompareRunOut"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CompareRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "window": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Window"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs",
+          "rows",
+          "warnings",
+          "window"
+        ],
+        "title": "CompareMetricsOut",
+        "description": "Comparison table."
+      },
+      "CompareRequest": {
+        "properties": {
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Run Ids"
+          },
+          "align": {
+            "type": "boolean",
+            "title": "Align",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_ids"
+        ],
+        "title": "CompareRequest",
+        "description": "Compare runs."
+      },
+      "CompareRowOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "higher_is_better": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Higher Is Better"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "best": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best"
+          },
+          "worst": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worst"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "group",
+          "format",
+          "higher_is_better",
+          "values",
+          "best",
+          "worst"
+        ],
+        "title": "CompareRowOut",
+        "description": "One metric row of a comparison table."
+      },
+      "CompareRunOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "strategy": {
+            "type": "string",
+            "title": "Strategy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "strategy"
+        ],
+        "title": "CompareRunOut",
+        "description": "A run in a comparison."
+      },
+      "CompatibilityIssue": {
+        "properties": {
+          "level": {
+            "$ref": "#/components/schemas/IssueLevel"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "level",
+          "field",
+          "message"
+        ],
+        "title": "CompatibilityIssue",
+        "description": "One problem with a configuration."
+      },
+      "DataSourceOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "datasets": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Datasets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "available",
+          "reason",
+          "datasets"
+        ],
+        "title": "DataSourceOut",
+        "description": "A data source with its datasets."
+      },
+      "DataSpec": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": "yahoo"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset",
+            "default": "daily"
+          },
+          "instruments": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Instruments"
+          },
+          "universe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PluginRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "default": "1d"
+          },
+          "adjustment": {
+            "$ref": "#/components/schemas/Adjustment",
+            "default": "split"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fields"
+          },
+          "options": {
+            "type": "object",
+            "title": "Options"
+          },
+          "options_chain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options Chain",
+            "description": "'source:dataset' of option chains for option overlays/strategies"
+          },
+          "extra_datasets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Extra Datasets",
+            "description": "'source:dataset' entries (e.g. fundamentals) as-of joined onto the prices"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "DataSpec",
+        "description": "Which data a run uses."
+      },
+      "DatasetPreviewOut": {
+        "properties": {
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "stats": {
+            "type": "object",
+            "title": "Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "stats"
+        ],
+        "title": "DatasetPreviewOut",
+        "description": "Rows and per-instrument statistics of a dataset."
+      },
+      "DatasetRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "instruments": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Instruments"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fields"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows",
+            "default": 0
+          },
+          "last_refresh": {
+            "type": "string",
+            "title": "Last Refresh",
+            "default": ""
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "default": ""
+          },
+          "request": {
+            "type": "object",
+            "title": "Request"
+          },
+          "quality": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Quality"
+          },
+          "survivorship_bias_free": {
+            "type": "boolean",
+            "title": "Survivorship Bias Free",
+            "default": false
+          },
+          "quality_label": {
+            "type": "string",
+            "title": "Quality Label",
+            "default": "standard"
+          },
+          "adjustment": {
+            "type": "string",
+            "title": "Adjustment",
+            "default": ""
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "source",
+          "dataset",
+          "name",
+          "frequency",
+          "start",
+          "end",
+          "instruments",
+          "fields",
+          "rows",
+          "last_refresh",
+          "path",
+          "request",
+          "quality",
+          "survivorship_bias_free",
+          "quality_label",
+          "adjustment",
+          "notes"
+        ],
+        "title": "DatasetRecord",
+        "description": "Catalog entry for one dataset.\n\nAttributes:\n    id: Dataset id (cache series key or import id).\n    kind: ``cache`` (pulled from a source) or ``import`` (local file).\n    source: Source plugin name.\n    dataset: Dataset name within the source.\n    name: Display name.\n    frequency: Bar frequency.\n    start: First timestamp (ISO).\n    end: Last timestamp (ISO).\n    instruments: Instrument ids.\n    fields: Data fields.\n    rows: Row count.\n    last_refresh: ISO time of the last fetch or import.\n    path: Parquet file with the current data.\n    request: Original request (for refresh), without secrets.\n    quality: Issue counts per severity.\n    survivorship_bias_free: Whether the dataset includes delisted instruments.\n    quality_label: Source quality label (e.g. ``lower`` for Yahoo).\n    adjustment: Price adjustment convention.\n    notes: Free-form notes."
+      },
+      "ExecutionPrice": {
+        "type": "string",
+        "enum": [
+          "close",
+          "open"
+        ],
+        "title": "ExecutionPrice",
+        "description": "Price at which the vectorized engine trades."
+      },
+      "ExecutionSpec": {
+        "properties": {
+          "engine": {
+            "type": "string",
+            "title": "Engine",
+            "default": "vectorized"
+          },
+          "lag_bars": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Lag Bars",
+            "default": 1
+          },
+          "price": {
+            "$ref": "#/components/schemas/ExecutionPrice",
+            "default": "close"
+          },
+          "rebalance": {
+            "$ref": "#/components/schemas/RebalanceRule",
+            "default": "on_change"
+          },
+          "rebalance_every_n": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rebalance Every N",
+            "default": 1
+          },
+          "cash_rate": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": -0.05,
+            "title": "Cash Rate",
+            "default": 0.0
+          },
+          "max_participation": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Max Participation",
+            "default": 1.0
+          },
+          "latency_bars": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Latency Bars",
+            "default": 0
+          },
+          "calendar": {
+            "type": "string",
+            "title": "Calendar",
+            "default": "XNYS"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ExecutionSpec",
+        "description": "Engine and execution settings.\n\nAttributes:\n    engine: Engine name (``vectorized`` or ``event``).\n    lag_bars: Bars between the decision bar and the trade bar. Must be >= 1 so a decision\n        made at the close of ``t`` can never trade at that same close.\n    price: Trade at the close or the open of the trade bar.\n    rebalance: Rebalance schedule.\n    rebalance_every_n: Bars between rebalances for ``every_n``.\n    cash_rate: Annual interest earned on positive cash (and paid on negative cash).\n    max_participation: Max fraction of bar volume an order may take (event engine).\n    latency_bars: Extra bars between order submission and eligibility (event engine).\n    calendar: Exchange calendar code used for annualization."
+      },
+      "ExperimentOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "runs": {
+            "type": "integer",
+            "title": "Runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "created_at",
+          "notes",
+          "runs"
+        ],
+        "title": "ExperimentOut",
+        "description": "An experiment with its run count."
+      },
+      "Frequency": {
+        "type": "string",
+        "enum": [
+          "1min",
+          "5min",
+          "15min",
+          "1h",
+          "1d",
+          "1w",
+          "1mo"
+        ],
+        "title": "Frequency",
+        "description": "Bar frequency. Minimum supported bar size is one minute."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ImportMapping": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "fixed_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Symbol"
+          },
+          "columns": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Columns"
+          },
+          "extra": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Extra"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "default": "1d"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": "UTC"
+          },
+          "datetime_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datetime Format"
+          },
+          "adjustment": {
+            "$ref": "#/components/schemas/Adjustment",
+            "default": "split"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp"
+        ],
+        "title": "ImportMapping",
+        "description": "How to convert a user file to the canonical schema.\n\nAttributes:\n    timestamp: Source column with dates/times.\n    symbol: Source column with instrument ids (``None`` = single-instrument file).\n    fixed_symbol: Instrument id to use when ``symbol`` is ``None``.\n    columns: Canonical field -> source column (open, high, low, close, volume, ...).\n    extra: Extra source columns to keep as fields (renamed to snake_case).\n    frequency: Bar frequency.\n    timezone: Timezone of naive timestamps in the file.\n    datetime_format: Optional ``strptime`` format.\n    adjustment: Whether prices are raw, split-adjusted or total-return adjusted.\n    name: Display name of the dataset."
+      },
+      "ImportPreviewOut": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "dtypes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dtypes"
+          },
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "columns",
+          "dtypes",
+          "rows",
+          "mapping"
+        ],
+        "title": "ImportPreviewOut",
+        "description": "Preview of a file to import."
+      },
+      "ImportRequest": {
+        "properties": {
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mapping"
+        ],
+        "title": "ImportRequest",
+        "description": "Import a staged upload (or a local path) with a mapping."
+      },
+      "InstrumentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "asset_class": {
+            "type": "string",
+            "title": "Asset Class"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "asset_class",
+          "name",
+          "exchange"
+        ],
+        "title": "InstrumentOut",
+        "description": "Instrument search result."
+      },
+      "IssueLevel": {
+        "type": "string",
+        "enum": [
+          "error",
+          "warning"
+        ],
+        "title": "IssueLevel",
+        "description": "Severity of a compatibility issue."
+      },
+      "JobDetailOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "progress": {
+            "type": "number",
+            "title": "Progress"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary": {
+            "type": "object",
+            "title": "Summary"
+          },
+          "logs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Logs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "progress",
+          "message",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "run_id",
+          "result",
+          "error",
+          "summary",
+          "logs"
+        ],
+        "title": "JobDetailOut",
+        "description": "A job with its log lines."
+      },
+      "JobOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "progress": {
+            "type": "number",
+            "title": "Progress"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary": {
+            "type": "object",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "progress",
+          "message",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "run_id",
+          "result",
+          "error",
+          "summary"
+        ],
+        "title": "JobOut",
+        "description": "A background job."
+      },
+      "LabelsUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "experiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment"
+          },
+          "archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived"
+          }
+        },
+        "type": "object",
+        "title": "LabelsUpdate",
+        "description": "Editable run labels."
+      },
+      "LookaheadOut": {
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "cut_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cut Points"
+          },
+          "mismatches": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Mismatches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "passed",
+          "message",
+          "cut_points",
+          "mismatches"
+        ],
+        "title": "LookaheadOut",
+        "description": "Lookahead check result."
+      },
+      "MetricDescriptor": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "format": {
+            "$ref": "#/components/schemas/MetricFormat",
+            "default": "number"
+          },
+          "higher_is_better": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Higher Is Better"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind",
+            "default": "scalar"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "benchmark": {
+            "type": "boolean",
+            "title": "Benchmark",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "group",
+          "format",
+          "higher_is_better",
+          "kind",
+          "description",
+          "benchmark"
+        ],
+        "title": "MetricDescriptor",
+        "description": "Static description of one metric output.\n\nAttributes:\n    key: Unique key across all metrics.\n    label: Display label.\n    group: Group name for the UI (Return, Risk, ...).\n    format: Display format.\n    higher_is_better: Direction used for best/worst highlighting (``None`` = neutral).\n    kind: Scalar or table.\n    description: Tooltip text.\n    benchmark: Whether the metric is also computed for the benchmark."
+      },
+      "MetricFormat": {
+        "type": "string",
+        "enum": [
+          "percent",
+          "ratio",
+          "number",
+          "integer",
+          "currency",
+          "bars",
+          "days"
+        ],
+        "title": "MetricFormat",
+        "description": "How a metric value is displayed."
+      },
+      "MetricKind": {
+        "type": "string",
+        "enum": [
+          "scalar",
+          "table"
+        ],
+        "title": "MetricKind",
+        "description": "Shape of a metric value."
+      },
+      "MetricValue": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark"
+          },
+          "table": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Table"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value",
+          "benchmark",
+          "table"
+        ],
+        "title": "MetricValue",
+        "description": "A computed metric for one run.\n\nAttributes:\n    key: Metric key.\n    value: Scalar value (``None`` when undefined).\n    benchmark: Same metric computed on the benchmark, if meaningful.\n    table: Rows for table metrics."
+      },
+      "MetricsOut": {
+        "properties": {
+          "descriptors": {
+            "items": {
+              "$ref": "#/components/schemas/MetricDescriptor"
+            },
+            "type": "array",
+            "title": "Descriptors"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MetricValue"
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "window": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Window"
+          }
+        },
+        "type": "object",
+        "required": [
+          "descriptors",
+          "values",
+          "window"
+        ],
+        "title": "MetricsOut",
+        "description": "Metric descriptors and values for one run."
+      },
+      "MonteCarloRequest": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "bootstrap",
+              "trades"
+            ],
+            "title": "Method",
+            "default": "bootstrap"
+          },
+          "n_paths": {
+            "type": "integer",
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "N Paths",
+            "default": 1000
+          },
+          "mean_block": {
+            "type": "number",
+            "maximum": 250.0,
+            "minimum": 1.0,
+            "title": "Mean Block",
+            "default": 5.0
+          },
+          "horizon": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horizon"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed",
+            "default": 7
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "MonteCarloRequest",
+        "description": "Monte Carlo of a stored run."
+      },
+      "OverlayStatsOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "before": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Before"
+          },
+          "after": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "After"
+          },
+          "delta_cagr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Cagr"
+          },
+          "cells_changed": {
+            "type": "integer",
+            "title": "Cells Changed"
+          },
+          "mean_abs_change": {
+            "type": "number",
+            "title": "Mean Abs Change"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "position",
+          "before",
+          "after",
+          "delta_cagr",
+          "cells_changed",
+          "mean_abs_change",
+          "notes"
+        ],
+        "title": "OverlayStatsOut",
+        "description": "What one overlay changed."
+      },
+      "PluginFailureOut": {
+        "properties": {
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "traceback": {
+            "type": "string",
+            "title": "Traceback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "module",
+          "origin",
+          "error",
+          "traceback"
+        ],
+        "title": "PluginFailureOut",
+        "description": "A plugin module that failed to import."
+      },
+      "PluginHealthOut": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          },
+          "loaded_modules": {
+            "type": "integer",
+            "title": "Loaded Modules"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/PluginFailureOut"
+            },
+            "type": "array",
+            "title": "Failures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "counts",
+          "loaded_modules",
+          "failures"
+        ],
+        "title": "PluginHealthOut",
+        "description": "Plugin health panel."
+      },
+      "PluginKind": {
+        "type": "string",
+        "enum": [
+          "data_source",
+          "strategy",
+          "portfolio_constructor",
+          "overlay",
+          "cost_model",
+          "slippage_model",
+          "fill_model",
+          "metric",
+          "chart",
+          "universe"
+        ],
+        "title": "PluginKind",
+        "description": "Kinds of plugins."
+      },
+      "PluginOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "implements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Implements"
+          },
+          "params_schema": {
+            "type": "object",
+            "title": "Params Schema"
+          },
+          "extra": {
+            "type": "object",
+            "title": "Extra"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "name",
+          "version",
+          "description",
+          "tags",
+          "capabilities",
+          "origin",
+          "module",
+          "implements",
+          "params_schema",
+          "extra"
+        ],
+        "title": "PluginOut",
+        "description": "A plugin as described to the front end."
+      },
+      "PluginRef": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "params": {
+            "type": "object",
+            "title": "Params"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PluginRef",
+        "description": "Reference to a plugin plus its parameters."
+      },
+      "PositionsOut": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "equity": {
+            "type": "number",
+            "title": "Equity"
+          },
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "equity",
+          "rows"
+        ],
+        "title": "PositionsOut",
+        "description": "Positions at a bar."
+      },
+      "Preset": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "config": {
+            "type": "object",
+            "title": "Config"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "config",
+          "created_at",
+          "updated_at",
+          "notes"
+        ],
+        "title": "Preset",
+        "description": "A saved configuration."
+      },
+      "PresetIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "config": {
+            "type": "object",
+            "title": "Config"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "config"
+        ],
+        "title": "PresetIn",
+        "description": "Create or update a preset."
+      },
+      "PullRequest": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": "yahoo"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset",
+            "default": "daily"
+          },
+          "instruments": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Instruments"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "default": "1d"
+          },
+          "adjustment": {
+            "$ref": "#/components/schemas/Adjustment",
+            "default": "split"
+          },
+          "refresh": {
+            "type": "boolean",
+            "title": "Refresh",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "instruments",
+          "start",
+          "end"
+        ],
+        "title": "PullRequest",
+        "description": "Pull data into the cache."
+      },
+      "QualityIssue": {
+        "properties": {
+          "check": {
+            "type": "string",
+            "title": "Check"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "instrument": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Examples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check",
+          "severity",
+          "message",
+          "instrument",
+          "count",
+          "examples"
+        ],
+        "title": "QualityIssue",
+        "description": "One data quality finding."
+      },
+      "QualityReport": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "instruments": {
+            "type": "integer",
+            "title": "Instruments"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/QualityIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "instruments",
+          "start",
+          "end",
+          "issues"
+        ],
+        "title": "QualityReport",
+        "description": "Data quality report for a dataset."
+      },
+      "RandomSpace": {
+        "properties": {
+          "space": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Space"
+          },
+          "n": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "N",
+            "default": 50
+          }
+        },
+        "type": "object",
+        "required": [
+          "space"
+        ],
+        "title": "RandomSpace",
+        "description": "Random search space."
+      },
+      "RebalanceRule": {
+        "type": "string",
+        "enum": [
+          "on_change",
+          "every_bar",
+          "weekly",
+          "monthly",
+          "quarterly",
+          "every_n"
+        ],
+        "title": "RebalanceRule",
+        "description": "When the portfolio is rebalanced to the latest targets.\n\n``on_change`` trades only when the targets differ from the previous decision, so a\nconstant target is bought once and then drifts (buy and hold). ``every_bar`` restores the\ntarget weights on every bar (constant-mix)."
+      },
+      "ResearchResultOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "summary": {
+            "type": "object",
+            "title": "Summary"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/TableOut"
+            },
+            "type": "array",
+            "title": "Tables"
+          },
+          "charts": {
+            "items": {
+              "$ref": "#/components/schemas/ChartSpec"
+            },
+            "type": "array",
+            "title": "Charts"
+          },
+          "source_run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "summary",
+          "tables",
+          "charts",
+          "source_run",
+          "target"
+        ],
+        "title": "ResearchResultOut",
+        "description": "A research result rendered generically by the front end."
+      },
+      "ResearchSplit": {
+        "properties": {
+          "train_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train End"
+          },
+          "validation_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation End"
+          },
+          "test_unlocked": {
+            "type": "boolean",
+            "title": "Test Unlocked",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ResearchSplit",
+        "description": "Train/validation/test split. The test period is locked until explicitly unlocked."
+      },
+      "RunCreate": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/BacktestConfig-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "RunCreate",
+        "description": "Launch a run."
+      },
+      "RunLaunchOut": {
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/RunRecord"
+          },
+          "job": {
+            "$ref": "#/components/schemas/JobOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run",
+          "job"
+        ],
+        "title": "RunLaunchOut",
+        "description": "A queued run and its job."
+      },
+      "RunRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "config": {
+            "type": "object",
+            "title": "Config"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "strategy": {
+            "type": "string",
+            "title": "Strategy"
+          },
+          "engine": {
+            "type": "string",
+            "title": "Engine"
+          },
+          "git_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Commit"
+          },
+          "plugin_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Plugin Versions"
+          },
+          "data_refs": {
+            "type": "object",
+            "title": "Data Refs"
+          },
+          "timings": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Timings"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "experiment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment"
+          },
+          "archived": {
+            "type": "boolean",
+            "title": "Archived",
+            "default": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "headline": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Headline"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "backtest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "config",
+          "config_hash",
+          "strategy",
+          "engine",
+          "git_commit",
+          "plugin_versions",
+          "data_refs",
+          "timings",
+          "tags",
+          "notes",
+          "experiment",
+          "archived",
+          "error",
+          "headline",
+          "parent_id",
+          "job_id",
+          "kind"
+        ],
+        "title": "RunRecord",
+        "description": "Stored run metadata."
+      },
+      "RunStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "cancelled"
+        ],
+        "title": "RunStatus",
+        "description": "Lifecycle of a run."
+      },
+      "SensitivityRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/BacktestConfig-Input"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cost",
+              "delay",
+              "capacity"
+            ],
+            "title": "Kind",
+            "default": "cost"
+          },
+          "multiples": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multiples"
+          },
+          "delays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delays"
+          },
+          "capitals": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capitals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "SensitivityRequest",
+        "description": "Cost, delay or capacity sensitivity."
+      },
+      "SeriesRole": {
+        "type": "string",
+        "enum": [
+          "series",
+          "benchmark",
+          "positive",
+          "negative",
+          "band",
+          "reference"
+        ],
+        "title": "SeriesRole",
+        "description": "Semantic role of a series, mapped to theme colors by the front end."
+      },
+      "SettingsOut": {
+        "properties": {
+          "data_dir": {
+            "type": "string",
+            "title": "Data Dir"
+          },
+          "user_plugins_dir": {
+            "type": "string",
+            "title": "User Plugins Dir"
+          },
+          "host": {
+            "type": "string",
+            "title": "Host"
+          },
+          "port": {
+            "type": "integer",
+            "title": "Port"
+          },
+          "dev_mode": {
+            "type": "boolean",
+            "title": "Dev Mode"
+          },
+          "default_calendar": {
+            "type": "string",
+            "title": "Default Calendar"
+          },
+          "default_benchmark": {
+            "type": "string",
+            "title": "Default Benchmark"
+          },
+          "wrds_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wrds Username"
+          },
+          "max_workers": {
+            "type": "integer",
+            "title": "Max Workers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data_dir",
+          "user_plugins_dir",
+          "host",
+          "port",
+          "dev_mode",
+          "default_calendar",
+          "default_benchmark",
+          "wrds_username",
+          "max_workers"
+        ],
+        "title": "SettingsOut",
+        "description": "Non-secret settings."
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "error"
+        ],
+        "title": "Severity",
+        "description": "Issue severity."
+      },
+      "SweepRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/BacktestConfig-Input"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "default": "strategy"
+          },
+          "grid": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grid"
+          },
+          "random": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RandomSpace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "default": "sharpe"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "SweepRequest",
+        "description": "Parameter sweep."
+      },
+      "TableColumnOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "format"
+        ],
+        "title": "TableColumnOut",
+        "description": "A column of a research table."
+      },
+      "TableOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/TableColumnOut"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "columns",
+          "rows"
+        ],
+        "title": "TableOut",
+        "description": "A generic table."
+      },
+      "TradesOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "rows"
+        ],
+        "title": "TradesOut",
+        "description": "Page of trades."
+      },
+      "ValidateOut": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/CompatibilityIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "issues"
+        ],
+        "title": "ValidateOut",
+        "description": "Compatibility check result."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WalkForwardRequest": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/BacktestConfig-Input"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "default": "strategy"
+          },
+          "grid": {
+            "additionalProperties": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Grid"
+          },
+          "train_bars": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 20.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Bars"
+          },
+          "test_bars": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 5.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Bars"
+          },
+          "anchored": {
+            "type": "boolean",
+            "title": "Anchored",
+            "default": false
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "default": "sharpe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "grid"
+        ],
+        "title": "WalkForwardRequest",
+        "description": "Walk-forward optimization."
+      },
+      "WrdsTestOut": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "message"
+        ],
+        "title": "WrdsTestOut",
+        "description": "WRDS connection test result."
+      }
+    }
+  }
+}
