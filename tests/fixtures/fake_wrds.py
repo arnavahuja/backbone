@@ -16,6 +16,37 @@ DELISTED = 10004
 DELIST_DATE = pd.Timestamp("2019-06-28")
 JOINS_LATE = 10003
 JOIN_DATE = pd.Timestamp("2019-01-02")
+NON_COMMON_SHRCD = 12
+"""Share code of permno 10002 in ``crsp.msenames`` (not a common stock)."""
+
+
+def _monthly(dsf: pd.DataFrame) -> pd.DataFrame:
+    """Monthly stock file from the daily one (last trading day of each month)."""
+    df = dsf.assign(m=dsf.date.dt.to_period("M"))
+    g = df.groupby(["permno", "m"])
+    out = g.agg(
+        date=("date", "max"),
+        prc=("prc", "last"),
+        vol=("vol", "sum"),
+        shrout=("shrout", "last"),
+        cfacpr=("cfacpr", "last"),
+    ).reset_index()
+    out["ret"] = g["ret"].apply(lambda x: float(np.prod(1 + x) - 1)).to_numpy()
+    out["prc"] = out["prc"].abs()
+    return out.drop(columns="m")
+
+
+def _monthly_index(dsi: pd.DataFrame) -> pd.DataFrame:
+    df = dsi.assign(m=dsi.date.dt.to_period("M"))
+    g = df.groupby("m")
+    out = pd.DataFrame(
+        {
+            "date": g["date"].max(),
+            "vwretd": g["vwretd"].apply(lambda x: float(np.prod(1 + x) - 1)),
+            "ewretd": g["ewretd"].apply(lambda x: float(np.prod(1 + x) - 1)),
+        }
+    )
+    return out.reset_index(drop=True)
 
 
 class FakeWrds:
@@ -64,8 +95,15 @@ class FakeWrds:
             ],
         )
         self.dsedelist = pd.DataFrame(
-            {"permno": [DELISTED], "dlstdt": [DELIST_DATE], "dlret": [-0.30]}
+            {
+                "permno": [DELISTED],
+                "dlstdt": [DELIST_DATE],
+                "dlret": [-0.30],
+                "dlstcd": [500],
+                "exchcd": [1],
+            }
         )
+        self.msf = _monthly(self.dsf)
         self.dsp500list = pd.DataFrame(
             {
                 "permno": list(PERMNOS),
@@ -96,6 +134,8 @@ class FakeWrds:
             funda,
             columns=["permno", "datadate", "ceq", "at", "lt", "sale", "ni", "oibdp", "capx", "dvc"],
         )
+        self.funda["revt"] = self.funda["sale"] * (1.0 + 0.1 * self.funda["permno"] % 7)
+        self.funda["cogs"] = self.funda["sale"] * 0.6
         self.factors = pd.DataFrame(
             {
                 "date": sessions,
@@ -117,9 +157,38 @@ class FakeWrds:
                 "nameendt": [pd.Timestamp("2024-12-31")] * 6,
             }
         )
+        self.msenames = pd.DataFrame(
+            {
+                "permno": list(PERMNOS),
+                "start": [pd.Timestamp("1990-01-01")] * 6,
+                "ending": [pd.Timestamp("2024-12-31")] * 6,
+                "shrcd": [11, NON_COMMON_SHRCD, 10, 11, 10, 11],
+                "exchcd": [1, 1, 3, 2, 3, 1],
+            }
+        )
+        months = self.factors.assign(m=self.factors.date.dt.to_period("M"))
+        grouped = months.groupby("m")
+        self.factors_monthly = pd.DataFrame(
+            {
+                c: grouped[c].apply(lambda x: float(np.prod(1 + x) - 1))
+                for c in ("mktrf", "smb", "hml", "rmw", "cma", "rf", "umd")
+            }
+        ).reset_index()
+        # WRDS dates monthly factor rows differently from CRSP month ends
+        self.factors_monthly["date"] = self.factors_monthly.pop("m").dt.to_timestamp()
+        mkt = self.factors.assign(vwretd=self.factors.mktrf + self.factors.rf)
+        mkt["ewretd"] = mkt.vwretd * 1.1
+        self.dsi = mkt[["date", "vwretd", "ewretd"]]
+        self.msi = _monthly_index(self.dsi)
+        self.mcti = pd.DataFrame(
+            {
+                "date": self.msi.date + pd.offsets.MonthEnd(0),
+                "b10ret": np.random.default_rng(5).normal(0.004, 0.02, len(self.msi)),
+            }
+        )
         self.queries: list[str] = []
 
-    def query(
+    def query(  # noqa: PLR0912 - one branch per table
         self, sql: str, params: dict[str, Any] | None = None, date_cols: list[str] | None = None
     ) -> pd.DataFrame:
         """Answer a query by table name."""
@@ -127,6 +196,30 @@ class FakeWrds:
         params = params or {}
         start = pd.Timestamp(params.get("start", "1900-01-01"))
         end = pd.Timestamp(params.get("end", "2100-01-01"))
+        if "crsp.msf " in sql:
+            ids = [int(x) for x in sql.split("permno in (")[1].split(")", maxsplit=1)[0].split(",")]
+            f = self.msf
+            return f[f.permno.isin(ids) & (f.date >= start) & (f.date <= end)].copy()
+        if "crsp.msedelist" in sql:
+            return self.dsedelist.copy()
+        if "crsp.msenames" in sql and "shrcd in" in sql:
+            codes = [
+                int(x) for x in sql.split("shrcd in (")[1].split(")", maxsplit=1)[0].split(",")
+            ]
+            exch = [
+                int(x) for x in sql.split("exchcd in (")[1].split(")", maxsplit=1)[0].split(",")
+            ]
+            f = self.msenames
+            return f[f.shrcd.isin(codes) & f.exchcd.isin(exch)][["permno", "start", "ending"]]
+        if "ff.fivefactors_monthly" in sql:
+            f = self.factors_monthly
+            return f[(f.date >= start) & (f.date <= end)].copy()
+        if "crsp.msi" in sql or "crsp.dsi" in sql:
+            f = self.msi if "crsp.msi" in sql else self.dsi
+            return f[(f.date >= start) & (f.date <= end)].copy()
+        if "crsp.mcti" in sql:
+            f = self.mcti
+            return f[(f.date >= start) & (f.date <= end)].copy()
         if "crsp.dsf" in sql:
             ids = [int(x) for x in sql.split("permno in (")[1].split(")", maxsplit=1)[0].split(",")]
             f = self.dsf
