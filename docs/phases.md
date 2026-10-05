@@ -158,6 +158,20 @@ tests (run, results, compare, research sweep, no-purple check).
 metric and chart are discovered, run through the API, shown on Run Detail and compared
 against a built-in run with zero edits outside `user_plugins/`.
 
+## Factor portfolios and comparison report
+
+WRDS: `crsp_common` share-code universe, delisting fill rule, monthly Fama-French factors,
+`crsp_index`, `crsp_treasury`, Fama-French book equity. Universe `market_cap_top_n`.
+Strategies `trailing_return`, `field_signal`, `composite_signal`, `fixed_weights`,
+`trend_filter`. Value-weighted, capped legs in `quantile_long_short`. Run-level risk-free
+series (cash interest and excess-return Sharpe), splices, `source:dataset:SYMBOL`
+benchmarks, month matching across sources, CAPM metrics. Compare page report export (CSV +
+PNG), `backbone preset import`. See `docs/howto/08-factor-portfolios-and-reports.md`.
+
+**Acceptance.** `tests/integration/test_factor_benchmarks.py` (fake WRDS).
+
+**Limitations.** The legacy CRSP stock files end in December 2024 (`msf_v2` is not read yet).
+
 ## Deferred / known limitations (overall)
 
 - Live or paper trading (non-goal for v1); the `Broker` protocol is the extension point.

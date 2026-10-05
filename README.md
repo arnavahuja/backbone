@@ -31,6 +31,7 @@ backbone run configs/examples/sma_synthetic.yaml
 backbone data pull SPY QQQ --start 2015-01-01 --end 2024-12-31
 backbone data import my_prices.csv
 backbone new strategy my_strategy
+backbone preset import configs/examples/benchmarks/*.yaml
 backbone plugins
 ```
 
@@ -38,10 +39,10 @@ backbone plugins
 
 | Area | Highlights |
 |---|---|
-| Data | Yahoo, WRDS (CRSP with delisting returns, Compustat by availability date, Fama-French, S&P 500 point-in-time membership, TAQ bars, OptionMetrics), local CSV/Parquet/Excel/Feather import with a mapping wizard, synthetic data. Versioned Parquet cache, DuckDB catalog, data quality reports |
+| Data | Yahoo, WRDS (CRSP with delisting returns, share-code universes, CRSP indices and Treasuries, Compustat by availability date, Fama-French daily/monthly, S&P 500 point-in-time membership, TAQ bars, OptionMetrics), local CSV/Parquet/Excel/Feather import with a mapping wizard, synthetic data. Versioned Parquet cache, DuckDB catalog, data quality reports |
 | Engines | Vectorized (closed-form drift, lag >= 1 enforced, open/close execution, rebalance schedules) and event-driven (market/limit/stop/stop-limit, TIF, partial fills, latency, fill models). Parity within 1e-10 at zero cost |
-| Pipeline | 14 strategies, 8 portfolio constructors, 30 overlays (sizing, exits, limits, drawdown control, hedging, option hedges, regime filters), before/after reporting per overlay |
-| Analytics | 11 metric groups (incl. deflated Sharpe, PSR, bootstrap CIs, factor alpha, option hedge cost), 41 charts, HTML tearsheet, CSV/Parquet export, date-range brushing that recomputes metrics |
+| Pipeline | 19 strategies (incl. generic trailing-return, field and composite signals), 8 portfolio constructors (value-weighted, capped deciles), 30 overlays (sizing, exits, limits, drawdown control, hedging, option hedges, regime filters), before/after reporting per overlay |
+| Analytics | 11 metric groups (incl. deflated Sharpe, PSR, bootstrap CIs, factor alpha, option hedge cost), 41 charts, HTML tearsheet, CSV/Parquet export, comparison report (CSV + PNG), risk-free series, date-range brushing that recomputes metrics |
 | Research | Grid/random sweeps, walk-forward, Monte Carlo, cost/delay/capacity sensitivity, regime analysis, PBO (CSCV), locked test period |
 | Futures & options | Continuous futures with pluggable roll rules and back-adjustment, roll costs, intraday and multi-frequency runs, Black-Scholes pricing, rolling option instruments (chain-priced or model-priced and flagged) |
 
