@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from pydantic import Field
 
+from backbone.core.errors import DataError
 from backbone.core.interfaces import ConstructionContext, PortfolioConstructor
 from backbone.core.params import ConstructorParams
 from backbone.core.registry import register
-from backbone.core.types import FloatArray, IntArray, TargetFrame, TargetKind
+from backbone.core.types import BoolArray, FloatArray, IntArray, TargetFrame, TargetKind
 
 
 class QuantileParams(ConstructorParams):
@@ -19,6 +22,46 @@ class QuantileParams(ConstructorParams):
     long_only: bool = Field(False, description="Hold only the top bucket")
     gross: float = Field(1.0, gt=0, le=5, description="Target gross exposure")
     min_names: int = Field(4, ge=1, description="Minimum instruments with a signal to trade")
+    weighting: Literal["equal", "value"] = Field(
+        "equal", description="Weights within each leg: equal, or proportional to a size field"
+    )
+    weight_field: str = Field("market_cap", description="Size field for value weighting")
+    max_leg_weight: float = Field(
+        1.0,
+        gt=0,
+        le=1,
+        description="Cap on any single name as a fraction of its leg (excess is spread "
+        "over the other names)",
+    )
+
+
+MAX_CAP_ITERATIONS = 100
+
+
+def leg_weights(member: BoolArray, size: FloatArray, cap: float) -> FloatArray:
+    """Row-wise weights summing to 1 over ``member``, proportional to ``size``, capped.
+
+    Names above the cap are set to it and the excess is redistributed pro rata over the
+    rest until no name exceeds it (or every name is capped when the cap is infeasible).
+    """
+    raw = np.where(member & np.isfinite(size) & (size > 0), size, 0.0)
+    total = raw.sum(axis=1, keepdims=True)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        w = np.where(total > 0, raw / total, 0.0)
+    if cap >= 1.0:
+        return w
+    for _ in range(MAX_CAP_ITERATIONS):
+        over = w > cap + 1e-12
+        if not over.any():
+            break
+        capped = w >= cap - 1e-12
+        excess = np.where(over, w - cap, 0.0).sum(axis=1, keepdims=True)
+        free = np.where(capped, 0.0, w)
+        free_total = free.sum(axis=1, keepdims=True)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            share = np.where(free_total > 0, free / free_total, 0.0)
+        w = np.where(capped, np.minimum(w, cap), w + excess * share)
+    return w
 
 
 def rank_rows(values: FloatArray) -> IntArray:
@@ -38,7 +81,11 @@ def rank_rows(values: FloatArray) -> IntArray:
     capabilities={"supports:short"},
 )
 class QuantileLongShort(PortfolioConstructor):
-    """Long the top quantile (or top N), short the bottom one, equal weight within legs."""
+    """Long the top quantile (or top N), short the bottom one.
+
+    Within each leg names are equal- or value-weighted (optionally capped per name). With
+    ``gross`` 2 each leg is 100% of equity (dollar neutral, 200% gross).
+    """
 
     Params = QuantileParams
     params: QuantileParams
@@ -60,12 +107,28 @@ class QuantileLongShort(PortfolioConstructor):
         if p.long_only:
             short = np.zeros_like(short)
         enough = count >= p.min_names
-        n_long = long.sum(axis=1, keepdims=True)
-        n_short = short.sum(axis=1, keepdims=True)
         legs = 1.0 if p.long_only else 2.0
-        with np.errstate(divide="ignore", invalid="ignore"):
-            w = np.where(long, p.gross / legs / n_long, 0.0) - np.where(
-                short, p.gross / legs / n_short, 0.0
-            )
+        if p.weighting == "value":
+            if not ctx.data.has_field(p.weight_field):
+                raise DataError(f"Value weighting needs the '{p.weight_field}' field")
+            size = ctx.data.aligned_panel(p.weight_field, signals.timestamps, signals.instruments)
+            w = (
+                leg_weights(long, size, p.max_leg_weight)
+                - leg_weights(short, size, p.max_leg_weight)
+            ) * (p.gross / legs)
+        else:
+            n_long = long.sum(axis=1, keepdims=True)
+            n_short = short.sum(axis=1, keepdims=True)
+            ones = np.ones_like(s)
+            if p.max_leg_weight < 1.0:
+                w = (
+                    leg_weights(long, ones, p.max_leg_weight)
+                    - leg_weights(short, ones, p.max_leg_weight)
+                ) * (p.gross / legs)
+            else:
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    w = np.where(long, p.gross / legs / n_long, 0.0) - np.where(
+                        short, p.gross / legs / n_short, 0.0
+                    )
         w = np.where(enough, np.nan_to_num(w), 0.0)
         return signals.replace(values=w, kind=TargetKind.WEIGHTS)
