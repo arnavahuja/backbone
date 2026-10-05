@@ -50,15 +50,16 @@ class RiskAdjustedMetrics(Metric):
 
     def compute(self, ctx: MetricContext) -> dict[str, MetricOutput]:
         """Compute risk-adjusted metrics."""
-        r, ppy, rf = ctx.returns, ctx.periods_per_year, ctx.risk_free_rate
+        r, ppy = ctx.returns, ctx.periods_per_year
+        excess, rf = ctx.excess_returns()
         mdd = S.max_drawdown(r)
         growth = S.cagr(r, ppy)
         calmar = growth / abs(mdd) if mdd < 0 and np.isfinite(growth) else math.nan
         trials = np.asarray(ctx.trial_sharpes, dtype=np.float64)
         nn = S.nan_to_none
         return {
-            "sharpe": nn(S.sharpe(r, ppy, rf)),
-            "sortino": nn(S.sortino(r, ppy, rf)),
+            "sharpe": nn(S.sharpe(excess, ppy, rf)),
+            "sortino": nn(S.sortino(excess, ppy, rf)),
             "calmar": nn(calmar),
             "omega": nn(S.omega(r)),
             "gain_to_pain": nn(S.gain_to_pain(r)),

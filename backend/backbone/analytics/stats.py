@@ -451,6 +451,33 @@ def ols(y: FloatArray, x: FloatArray) -> tuple[FloatArray, FloatArray, float]:
     return coef, t, float(r2)
 
 
+def _match_dates(r_ts: TimeArray, f_ts: TimeArray) -> tuple[IntArray, IntArray]:
+    """Indices pairing return bars with factor rows: same day, else same month.
+
+    Monthly data from different sources is dated differently (first day, calendar month
+    end, last trading day); matching by month pairs them when daily matching finds little.
+    """
+    r_days = r_ts.astype("datetime64[D]")
+    f_days = f_ts.astype("datetime64[D]")
+    _, ri, fi = np.intersect1d(r_days, f_days, return_indices=True)
+    if len(ri) >= FACTOR_MIN_OBS or len(r_days) == 0:
+        return ri, fi
+    r_months = r_ts.astype("datetime64[M]")
+    f_months = f_ts.astype("datetime64[M]")
+    if len(np.unique(r_months)) != len(r_months) or len(np.unique(f_months)) != len(f_months):
+        return ri, fi
+    _, ri_m, fi_m = np.intersect1d(r_months, f_months, return_indices=True)
+    return (ri_m, fi_m) if len(ri_m) > len(ri) else (ri, fi)
+
+
+def align_series(timestamps: TimeArray, other_ts: TimeArray, values: FloatArray) -> FloatArray:
+    """``values`` (dated ``other_ts``) on the ``timestamps`` grid (day, else month match)."""
+    out = np.full(len(timestamps), np.nan)
+    ri, fi = _match_dates(timestamps, other_ts)
+    out[ri] = values[fi]
+    return out
+
+
 def align_factors(
     timestamps: TimeArray, returns: FloatArray, factors: pl.DataFrame, names: tuple[str, ...]
 ) -> tuple[FloatArray, FloatArray, FloatArray] | None:
@@ -458,10 +485,8 @@ def align_factors(
     cols = [c for c in names if c in factors.columns]
     if len(cols) != len(names):
         return None
-    f_dates = np_times(factors.get_column(C.TIMESTAMP)).astype("datetime64[D]")
-    r_dates = timestamps.astype("datetime64[D]")
-    common, ri, fi = np.intersect1d(r_dates, f_dates, return_indices=True)
-    if len(common) < FACTOR_MIN_OBS:
+    ri, fi = _match_dates(timestamps, np_times(factors.get_column(C.TIMESTAMP)))
+    if len(ri) < FACTOR_MIN_OBS:
         return None
     x = factors.select(cols).to_numpy()[fi]
     rf = factors.get_column("rf").to_numpy()[fi] if "rf" in factors.columns else np.zeros(len(fi))

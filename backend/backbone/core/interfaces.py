@@ -483,6 +483,9 @@ class MetricContext:
         factors: Optional factor returns frame (``timestamp`` + factor columns).
         n_trials: Number of trials in the experiment (for deflated Sharpe).
         trial_sharpes: Sharpe ratios of all trials in the experiment (per period).
+
+    The per-bar risk-free series, when the run has one, is ``result.risk_free``; use
+    :meth:`excess_returns` for Sharpe-type ratios.
     """
 
     result: BacktestResult
@@ -494,6 +497,17 @@ class MetricContext:
     factors: pl.DataFrame | None = None
     n_trials: int = 1
     trial_sharpes: tuple[float, ...] = ()
+
+    def excess_returns(self) -> tuple[FloatArray, float]:
+        """Returns for Sharpe-type ratios and the annual rate still to subtract.
+
+        With a per-bar risk-free series the returns are net of it (rate 0); otherwise the
+        raw returns and the constant annual ``risk_free_rate``.
+        """
+        rf = self.result.risk_free
+        if rf is not None and len(rf) == len(self.returns):
+            return self.returns - np.nan_to_num(rf, nan=0.0), 0.0
+        return self.returns, self.risk_free_rate
 
 
 MetricOutput = float | None | list[dict[str, Any]]

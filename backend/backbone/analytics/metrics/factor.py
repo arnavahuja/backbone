@@ -12,19 +12,42 @@ from backbone.core.specs import MetricDescriptor, MetricKind
 from backbone.core.specs import MetricFormat as F
 
 GROUP = "Factor"
+CAPM: Final = ("mkt_rf",)
 FF3: Final = ("mkt_rf", "smb", "hml")
 FF5_MOM: Final = ("mkt_rf", "smb", "hml", "rmw", "cma", "mom")
 
 
 @register("metric", name="factor", version="1.0.0", tags=["factor"], capabilities={"needs:factors"})
 class FactorMetrics(Metric):
-    """Alpha and loadings versus Fama-French 3 and 5 factors plus momentum, with t-stats.
+    """Alpha and loadings versus CAPM, Fama-French 3 and 5 factors plus momentum.
 
     Needs daily factor returns in the metric context (from WRDS/Fama-French or an import
     with columns ``mkt_rf, smb, hml, rmw, cma, mom, rf``).
     """
 
     descriptors: ClassVar[tuple[MetricDescriptor, ...]] = (
+        MetricDescriptor(
+            key="capm_alpha",
+            label="CAPM alpha (ann.)",
+            group=GROUP,
+            format=F.PERCENT,
+            higher_is_better=True,
+            benchmark=False,
+        ),
+        MetricDescriptor(
+            key="capm_alpha_t",
+            label="CAPM alpha t-stat",
+            group=GROUP,
+            format=F.NUMBER,
+            higher_is_better=True,
+            benchmark=False,
+        ),
+        MetricDescriptor(
+            key="capm_beta", label="CAPM beta", group=GROUP, format=F.NUMBER, benchmark=False
+        ),
+        MetricDescriptor(
+            key="capm_r2", label="CAPM R²", group=GROUP, format=F.PERCENT, benchmark=False
+        ),
         MetricDescriptor(
             key="ff3_alpha",
             label="FF3 alpha (ann.)",
@@ -84,7 +107,8 @@ class FactorMetrics(Metric):
         ts = ctx.result.timestamps
         out = dict(empty)
         table: list[dict[str, object]] = []
-        for label, names, prefix in (("FF3", FF3, "ff3"), ("FF5+MOM", FF5_MOM, "ff5m")):
+        models = (("CAPM", CAPM, "capm"), ("FF3", FF3, "ff3"), ("FF5+MOM", FF5_MOM, "ff5m"))
+        for label, names, prefix in models:
             aligned = align_factors(ts, ctx.returns, ctx.factors, names)
             if aligned is None:
                 continue
@@ -92,7 +116,10 @@ class FactorMetrics(Metric):
             coef, t, r2 = ols(y, x)
             out[f"{prefix}_alpha"] = S.nan_to_none(coef[0] * ctx.periods_per_year)
             out[f"{prefix}_alpha_t"] = S.nan_to_none(t[0])
-            if prefix == "ff3":
+            if prefix == "capm":
+                out["capm_beta"] = S.nan_to_none(coef[1])
+                out["capm_r2"] = S.nan_to_none(r2)
+            elif prefix == "ff3":
                 out["ff3_mkt_beta"] = S.nan_to_none(coef[1])
             else:
                 out["ff5m_r2"] = S.nan_to_none(r2)
