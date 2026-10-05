@@ -53,7 +53,7 @@ frontend-build:
 
 openapi:  ## Regenerate the OpenAPI schema and the TypeScript client types
 	$(PYTHON) -m backbone.cli openapi --out $(FRONTEND)/openapi.json
-	cd $(FRONTEND) && $(PNPM) run gen:api
+	cd $(FRONTEND) && $(PNPM) run gen:api && $(PNPM) exec prettier --write src/api/schema.d.ts
 
 e2e:  ## Playwright smoke tests (starts API and front end)
 	cd $(FRONTEND) && PYTHON=$(PYTHON) $(PNPM) run e2e

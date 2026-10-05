@@ -396,6 +396,17 @@ export function StrategyLabPage() {
               />
             </div>
             <div className="mt-3">
+              <Label htmlFor="splices">
+                Splices (extend an instrument back with a proxy, e.g. IEF=wrds:crsp_treasury:B10RET)
+              </Label>
+              <Input
+                id="splices"
+                value={draft.splices}
+                placeholder="TARGET=source:dataset:SERIES, …"
+                onChange={(e) => set({ splices: e.target.value })}
+              />
+            </div>
+            <div className="mt-3">
               <Label htmlFor="chain">Option chains (optional, e.g. wrds:optionm_chain)</Label>
               <Input
                 id="chain"
@@ -589,7 +600,7 @@ export function StrategyLabPage() {
                 <Input
                   id="bench"
                   value={draft.benchmark}
-                  placeholder="SPY or source:SYMBOL"
+                  placeholder="SPY, source:SYMBOL or source:dataset:SYMBOL"
                   onChange={(e) => set({ benchmark: e.target.value })}
                 />
               </div>
@@ -600,6 +611,15 @@ export function StrategyLabPage() {
                   value={draft.factors}
                   placeholder="wrds:ff_factors"
                   onChange={(e) => set({ factors: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="riskfree">Risk-free (cash earns it, Sharpe uses excess)</Label>
+                <Input
+                  id="riskfree"
+                  value={draft.riskFree}
+                  placeholder="wrds:ff_factors:rf"
+                  onChange={(e) => set({ riskFree: e.target.value })}
                 />
               </div>
               <div>

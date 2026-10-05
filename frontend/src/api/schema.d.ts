@@ -760,6 +760,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/compare/report': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Compare Report
+     * @description CSV tables and PNG charts comparing the selected runs (zip).
+     */
+    post: operations['compare_report_api_v1_compare_report_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/jobs': {
     parameters: {
       query?: never
@@ -1118,9 +1138,14 @@ export interface components {
       benchmark?: string | null
       /**
        * Factors
-       * @description 'source:dataset' of daily factor returns for attribution
+       * @description 'source:dataset' of factor returns for attribution
        */
       factors?: string | null
+      /**
+       * Risk Free
+       * @description 'source:dataset[:field]' of per-period risk-free returns (e.g. 'wrds:ff_factors:rf'): cash earns it and Sharpe-type metrics use excess returns
+       */
+      risk_free?: string | null
       /**
        * Initial Capital
        * @default 1000000
@@ -1166,9 +1191,14 @@ export interface components {
       benchmark?: string | null
       /**
        * Factors
-       * @description 'source:dataset' of daily factor returns for attribution
+       * @description 'source:dataset' of factor returns for attribution
        */
       factors?: string | null
+      /**
+       * Risk Free
+       * @description 'source:dataset[:field]' of per-period risk-free returns (e.g. 'wrds:ff_factors:rf'): cash earns it and Sharpe-type metrics use excess returns
+       */
+      risk_free?: string | null
       /**
        * Initial Capital
        * @default 1000000
@@ -1524,6 +1554,11 @@ export interface components {
        * @description 'source:dataset' entries (e.g. fundamentals) as-of joined onto the prices
        */
       extra_datasets?: string[]
+      /**
+       * Splices
+       * @description 'TARGET=source:dataset:SERIES' entries: before TARGET has prices, its returns come from SERIES (e.g. 'IEF=wrds:crsp_treasury:B10RET')
+       */
+      splices?: string[]
     }
     /**
      * DatasetPreviewOut
@@ -2274,6 +2309,77 @@ export interface components {
      * @enum {string}
      */
     RebalanceRule: 'on_change' | 'every_bar' | 'weekly' | 'monthly' | 'quarterly' | 'every_n'
+    /**
+     * ReportRequest
+     * @description What to put in a comparison report.
+     */
+    ReportRequest: {
+      /** Run Ids */
+      run_ids: string[]
+      /**
+       * Align
+       * @description Restrict every run to the common date range
+       * @default true
+       */
+      align: boolean
+      /**
+       * Periods
+       * @description Sub-periods for the sub-period table
+       */
+      periods?: components['schemas']['ReportWindow'][]
+      /**
+       * Crisis Windows
+       * @description Windows for cumulative returns
+       */
+      crisis_windows?: components['schemas']['ReportWindow'][]
+      /**
+       * Cost Levels Bps
+       * @description One-way trading cost levels to re-run each strategy at (empty: skip)
+       */
+      cost_levels_bps?: number[]
+      /**
+       * Vol Target
+       * @description Annual vol for scaled series (None: no scaling)
+       * @default 0.1
+       */
+      vol_target: number | null
+      /**
+       * Vol Scale
+       * @description Which runs get a vol-scaled series: market-neutral ones, all, or none
+       * @default neutral
+       */
+      vol_scale: string
+      /**
+       * Rolling Window
+       * @description Bars in the rolling Sharpe
+       * @default 36
+       */
+      rolling_window: number
+      /**
+       * Charts
+       * @description Include PNG charts
+       * @default true
+       */
+      charts: boolean
+    }
+    /**
+     * ReportWindow
+     * @description A labelled date window.
+     */
+    ReportWindow: {
+      /** Label */
+      label: string
+      /**
+       * Start
+       * Format: date
+       */
+      start: string
+      /**
+       * End
+       * Format: date
+       */
+      end: string
+    }
     /**
      * ResearchResultOut
      * @description A research result rendered generically by the front end.
@@ -3800,6 +3906,39 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CombineOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  compare_report_api_v1_compare_report_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReportRequest']
+      }
+    }
+    responses: {
+      /** @description Report zip */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/zip': unknown
         }
       }
       /** @description Validation Error */

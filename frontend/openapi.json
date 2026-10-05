@@ -1933,6 +1933,44 @@
         }
       }
     },
+    "/api/v1/compare/report": {
+      "post": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Compare Report",
+        "description": "CSV tables and PNG charts comparing the selected runs (zip).",
+        "operationId": "compare_report_api_v1_compare_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Report zip",
+            "content": {
+              "application/zip": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "tags": [
@@ -2784,7 +2822,19 @@
               }
             ],
             "title": "Factors",
-            "description": "'source:dataset' of daily factor returns for attribution"
+            "description": "'source:dataset' of factor returns for attribution"
+          },
+          "risk_free": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Free",
+            "description": "'source:dataset[:field]' of per-period risk-free returns (e.g. 'wrds:ff_factors:rf'): cash earns it and Sharpe-type metrics use excess returns"
           },
           "initial_capital": {
             "type": "number",
@@ -2921,7 +2971,19 @@
               }
             ],
             "title": "Factors",
-            "description": "'source:dataset' of daily factor returns for attribution"
+            "description": "'source:dataset' of factor returns for attribution"
+          },
+          "risk_free": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Free",
+            "description": "'source:dataset[:field]' of per-period risk-free returns (e.g. 'wrds:ff_factors:rf'): cash earns it and Sharpe-type metrics use excess returns"
           },
           "initial_capital": {
             "type": "number",
@@ -3739,6 +3801,14 @@
             "type": "array",
             "title": "Extra Datasets",
             "description": "'source:dataset' entries (e.g. fundamentals) as-of joined onto the prices"
+          },
+          "splices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Splices",
+            "description": "'TARGET=source:dataset:SERIES' entries: before TARGET has prices, its returns come from SERIES (e.g. 'IEF=wrds:crsp_treasury:B10RET')"
           }
         },
         "additionalProperties": false,
@@ -5337,6 +5407,118 @@
         ],
         "title": "RebalanceRule",
         "description": "When the portfolio is rebalanced to the latest targets.\n\n``on_change`` trades only when the targets differ from the previous decision, so a\nconstant target is bought once and then drifts (buy and hold). ``every_bar`` restores the\ntarget weights on every bar (constant-mix)."
+      },
+      "ReportRequest": {
+        "properties": {
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Run Ids"
+          },
+          "align": {
+            "type": "boolean",
+            "title": "Align",
+            "description": "Restrict every run to the common date range",
+            "default": true
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/ReportWindow"
+            },
+            "type": "array",
+            "title": "Periods",
+            "description": "Sub-periods for the sub-period table"
+          },
+          "crisis_windows": {
+            "items": {
+              "$ref": "#/components/schemas/ReportWindow"
+            },
+            "type": "array",
+            "title": "Crisis Windows",
+            "description": "Windows for cumulative returns"
+          },
+          "cost_levels_bps": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Cost Levels Bps",
+            "description": "One-way trading cost levels to re-run each strategy at (empty: skip)"
+          },
+          "vol_target": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vol Target",
+            "description": "Annual vol for scaled series (None: no scaling)",
+            "default": 0.1
+          },
+          "vol_scale": {
+            "type": "string",
+            "pattern": "^(neutral|all|none)$",
+            "title": "Vol Scale",
+            "description": "Which runs get a vol-scaled series: market-neutral ones, all, or none",
+            "default": "neutral"
+          },
+          "rolling_window": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 3.0,
+            "title": "Rolling Window",
+            "description": "Bars in the rolling Sharpe",
+            "default": 36
+          },
+          "charts": {
+            "type": "boolean",
+            "title": "Charts",
+            "description": "Include PNG charts",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_ids"
+        ],
+        "title": "ReportRequest",
+        "description": "What to put in a comparison report."
+      },
+      "ReportWindow": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "start",
+          "end"
+        ],
+        "title": "ReportWindow",
+        "description": "A labelled date window."
       },
       "ResearchResultOut": {
         "properties": {

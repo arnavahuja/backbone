@@ -37,6 +37,8 @@ export interface LabDraft {
   factors: string
   optionsChain: string
   extraDatasets: string
+  splices: string
+  riskFree: string
   initialCapital: number
   seed: number
   experiment: string
@@ -75,6 +77,8 @@ export const defaultDraft: LabDraft = {
   factors: '',
   optionsChain: '',
   extraDatasets: '',
+  splices: '',
+  riskFree: '',
   initialCapital: 1_000_000,
   seed: 42,
   experiment: '',
@@ -102,7 +106,7 @@ export const useLabStore = create<LabState>()(
     }),
     {
       name: 'backbone-lab-draft',
-      version: 2,
+      version: 3,
       // fill fields added in later versions with their defaults
       migrate: (persisted) => {
         const old = (persisted as { draft?: Partial<LabDraft> } | null)?.draft ?? {}

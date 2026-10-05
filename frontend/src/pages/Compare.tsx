@@ -10,6 +10,7 @@ import {
   type ChartInfo,
 } from '@/api/hooks'
 import { ChartPanel } from '@/components/ChartPanel'
+import { ReportExport } from '@/components/ReportExport'
 import {
   Badge,
   Button,
@@ -317,6 +318,7 @@ export function ComparePage() {
             ))}
           </div>
           <CombinedPortfolio runIds={selected} labels={labels} />
+          <ReportExport runIds={selected} />
         </>
       )}
     </div>

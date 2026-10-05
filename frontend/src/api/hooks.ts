@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, unwrap, type Schemas } from './client'
+import { API_BASE, ApiError, api, unwrap, type Schemas } from './client'
 
 export type Plugin = Schemas['PluginOut']
 export type PluginKind = Schemas['PluginKind']
@@ -16,6 +16,7 @@ export type CompareTable = Schemas['CompareMetricsOut']
 export type Preset = Schemas['Preset']
 export type Issue = Schemas['CompatibilityIssue']
 export type ImportMapping = Schemas['ImportMapping']
+export type ReportRequest = Schemas['ReportRequest']
 
 export interface Window {
   start?: string | null
@@ -295,6 +296,40 @@ export function useCompareChart(
 }
 
 // ------------------------------------------------------------------ mutations
+
+/** Build the comparison report (zip of CSVs and PNG charts) and save it. */
+export function useDownloadReport() {
+  return useMutation({
+    mutationFn: async (body: ReportRequest) => {
+      const response = await fetch(`${API_BASE}/compare/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!response.ok) {
+        const err = (await response.json().catch(() => null)) as {
+          code?: string
+          message?: string
+        } | null
+        throw new ApiError(
+          {
+            code: err?.code ?? `http_${response.status}`,
+            message: err?.message ?? response.statusText,
+          },
+          response.status,
+        )
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'comparison-report.zip'
+      link.click()
+      URL.revokeObjectURL(url)
+      return blob.size
+    },
+  })
+}
 
 export function useLaunchRun() {
   const qc = useQueryClient()
