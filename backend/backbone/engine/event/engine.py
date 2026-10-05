@@ -55,7 +55,13 @@ from backbone.core.types import (
     TimeInForce,
     pl_times,
 )
-from backbone.engine.base import RunOptions, align_targets, apply_membership
+from backbone.engine.base import (
+    CASH_RETURNS_KEY,
+    RunOptions,
+    align_targets,
+    apply_membership,
+    risk_free_series,
+)
 from backbone.engine.event.broker import BarBook, SimulatedBroker
 from backbone.engine.event.context import EventContext
 from backbone.engine.event.ledger import Ledger
@@ -261,6 +267,11 @@ class EventEngine:
 
     def _pre_trade(self, loop: _Loop, t: int) -> None:
         """Holding costs and cash interest over bar t, then corporate actions."""
+        cash_returns = loop.options.extras.get(CASH_RETURNS_KEY)
+        if isinstance(cash_returns, np.ndarray):
+            loop.ledger.cash_rate = (
+                float(np.nan_to_num(cash_returns[t])) * loop.ledger.periods_per_year
+            )
         if t > 0:
             for cat, amount in loop.ledger.accrue(loop.prev_close, self.cost_models).items():
                 loop.costs.setdefault(cat, np.zeros(loop.n_t))[t] += amount
@@ -391,6 +402,7 @@ class EventEngine:
             fills=_fills_frame(loop.fills),
             overlay_reports=loop.reports,
             aux=aux_panels(data.fields, data.panel),
+            risk_free=risk_free_series(options),
             config=config.model_dump(mode="json"),
             metadata={
                 "engine": self.name,

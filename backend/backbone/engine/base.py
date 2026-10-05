@@ -90,6 +90,24 @@ def apply_membership(targets: TargetFrame, membership: FloatArray | None) -> Tar
     return targets.replace(values=values)
 
 
+CASH_RETURNS_KEY = "cash_returns"
+"""``RunOptions.extras`` key of per-bar returns on cash (a risk-free series)."""
+
+
+def cash_input(config: BacktestConfig, options: RunOptions) -> float | FloatArray:
+    """Per-bar cash returns from a risk-free series, else the annual ``cash_rate``."""
+    series = options.extras.get(CASH_RETURNS_KEY)
+    if isinstance(series, np.ndarray):
+        return series
+    return config.execution.cash_rate
+
+
+def risk_free_series(options: RunOptions) -> FloatArray | None:
+    """The per-bar risk-free series the run was given, if any."""
+    series = options.extras.get(CASH_RETURNS_KEY)
+    return series if isinstance(series, np.ndarray) else None
+
+
 def close_panel(data: MarketData) -> FloatArray:
     """Close prices panel."""
     return data.panel(C.CLOSE)

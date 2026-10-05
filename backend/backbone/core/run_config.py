@@ -53,6 +53,11 @@ class DataSpec(BaseModel):
         default_factory=list,
         description="'source:dataset' entries (e.g. fundamentals) as-of joined onto the prices",
     )
+    splices: list[str] = Field(
+        default_factory=list,
+        description="'TARGET=source:dataset:SERIES' entries: before TARGET has prices, its "
+        "returns come from SERIES (e.g. 'IEF=wrds:crsp_treasury:B10RET')",
+    )
 
     @model_validator(mode="after")
     def _check(self) -> DataSpec:
@@ -156,7 +161,12 @@ class BacktestConfig(BaseModel):
     execution: ExecutionSpec = Field(default_factory=ExecutionSpec)
     benchmark: str | None = None
     factors: str | None = Field(
-        None, description="'source:dataset' of daily factor returns for attribution"
+        None, description="'source:dataset' of factor returns for attribution"
+    )
+    risk_free: str | None = Field(
+        None,
+        description="'source:dataset[:field]' of per-period risk-free returns (e.g. "
+        "'wrds:ff_factors:rf'): cash earns it and Sharpe-type metrics use excess returns",
     )
     initial_capital: float = Field(DEFAULT_CAPITAL, gt=0)
     seed: int = DEFAULT_SEED

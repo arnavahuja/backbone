@@ -117,6 +117,7 @@ class BacktestResult:
         fills: Fills table.
         overlay_reports: One report per overlay, in pipeline order.
         aux: Extra ``(T, N)`` panels carried from the data (option Greeks, strikes).
+        risk_free: Per-bar risk-free returns (``config.risk_free``) or ``None``.
         periods_per_year: Annualization factor derived from frequency and calendar.
         frequency: Bar frequency.
         config: Serialized ``BacktestConfig``.
@@ -143,6 +144,7 @@ class BacktestResult:
     fills: pl.DataFrame = field(default_factory=lambda: empty_frame(FILL_COLUMNS))
     overlay_reports: tuple[OverlayReport, ...] = ()
     aux: dict[str, FloatArray] = field(default_factory=dict)
+    risk_free: FloatArray | None = None
     config: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -239,6 +241,7 @@ class BacktestResult:
             turnover=self.turnover[sl],
             costs={k: v[sl] for k, v in self.costs.items()},
             aux={k: v[sl] for k, v in self.aux.items()},
+            risk_free=self.risk_free[sl] if self.risk_free is not None else None,
             benchmark_returns=bench,
             trades=trades,
         )

@@ -46,7 +46,13 @@ from backbone.core.types import (
     TimeArray,
     pl_times,
 )
-from backbone.engine.base import RunOptions, align_targets, apply_membership
+from backbone.engine.base import (
+    RunOptions,
+    align_targets,
+    apply_membership,
+    cash_input,
+    risk_free_series,
+)
 from backbone.engine.pipeline import Pipeline
 from backbone.engine.returns import ReturnPanels, compute_returns
 from backbone.engine.schedule import rebalance_mask
@@ -108,11 +114,14 @@ class VectorizedEngine:
         timestamps: TimeArray,
         returns: ReturnPanels,
         targets: FloatArray,
-        cash_rate: float,
+        cash_rate: float | FloatArray,
         periods_per_year: float,
         tradable: BoolArray | None = None,
     ) -> BarPath:
-        """Simulate the pre-cost path for decision-time ``targets`` ``(T, N)``."""
+        """Simulate the pre-cost path for decision-time ``targets`` ``(T, N)``.
+
+        ``cash_rate`` is an annual rate, or per-bar cash returns ``(T,)`` (risk-free series).
+        """
         ex = config.execution
         exec_targets = lag_targets(targets, ex.lag_bars)
         if tradable is not None:
@@ -120,7 +129,10 @@ class VectorizedEngine:
         mask = rebalance_mask(
             timestamps, ex.rebalance, ex.rebalance_every_n, ex.lag_bars, exec_targets
         )
-        cash_per_bar = np.full(len(timestamps), cash_rate / periods_per_year)
+        if isinstance(cash_rate, np.ndarray):
+            cash_per_bar = np.nan_to_num(np.asarray(cash_rate, dtype=np.float64), nan=0.0).copy()
+        else:
+            cash_per_bar = np.full(len(timestamps), cash_rate / periods_per_year)
         if len(cash_per_bar):
             cash_per_bar[0] = 0.0  # no holding period before the first bar
         if ex.price is ExecutionPrice.CLOSE:
@@ -161,6 +173,7 @@ class VectorizedEngine:
         returns: ReturnPanels,
         periods_per_year: float,
         tradable: BoolArray | None,
+        cash: float | FloatArray | None = None,
     ) -> Callable[[TargetFrame], FloatArray]:
         """Return a function giving zero-cost returns of a target frame (for overlays)."""
 
@@ -171,7 +184,7 @@ class VectorizedEngine:
                 data.timestamps,
                 returns,
                 aligned.values,
-                config.execution.cash_rate,
+                config.execution.cash_rate if cash is None else cash,
                 periods_per_year,
                 tradable,
             )
@@ -241,7 +254,9 @@ class VectorizedEngine:
         weights = align_targets(weights, data)
         returns = compute_returns(data)
         tradable = np.isfinite(data.panel(C.CLOSE))
-        simulate = self.simulate_zero_cost(config, data, returns, ppy, tradable)
+        simulate = self.simulate_zero_cost(
+            config, data, returns, ppy, tradable, cash_input(config, options)
+        )
         options.report(0.4, "applying overlays")
         final, reports = pipeline.apply_overlays(
             weights,
@@ -269,7 +284,7 @@ class VectorizedEngine:
         returns = compute_returns(data)
         tradable = np.isfinite(close)
         path = self.bar_path(
-            config, ts, returns, targets.values, config.execution.cash_rate, ppy, tradable
+            config, ts, returns, targets.values, cash_input(config, options), ppy, tradable
         )
         exec_price = (
             data.panel(C.OPEN)
@@ -351,6 +366,7 @@ class VectorizedEngine:
             fills=fills,
             overlay_reports=overlay_reports,
             aux=aux_panels(data.fields, data.panel),
+            risk_free=risk_free_series(options),
             config=config.model_dump(mode="json"),
             metadata={
                 "engine": self.name,

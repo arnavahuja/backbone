@@ -15,6 +15,7 @@ import polars as pl
 import structlog
 
 from backbone.analytics.service import AnalyticsService
+from backbone.analytics.stats import align_series
 from backbone.core import columns as C
 from backbone.core.calendar import PERIODS_PER_YEAR_KEY, TradingCalendar
 from backbone.core.errors import CompatibilityError, ConfigError
@@ -30,12 +31,13 @@ from backbone.core.registry import PluginKind, registry
 from backbone.core.results import BacktestResult
 from backbone.core.run_config import BacktestConfig, PluginRef
 from backbone.core.specs import MetricValue
-from backbone.core.types import DataRequest, FloatArray, MarketData
+from backbone.core.types import DataRequest, FloatArray, Frequency, MarketData, pl_times
 from backbone.data.fundamentals import asof_join, derive_ratios
 from backbone.data.service import DataService
-from backbone.engine.base import Engine, RunOptions
+from backbone.engine.base import CASH_RETURNS_KEY, Engine, RunOptions
 from backbone.engine.event.engine import EventEngine
 from backbone.engine.pipeline import NamedOverlay, Pipeline
+from backbone.engine.returns import compute_returns
 from backbone.engine.vectorized import VectorizedEngine
 from backbone.services.compatibility import CompatibilityChecker
 
@@ -43,6 +45,8 @@ log = structlog.get_logger(__name__)
 
 ProgressFn = Callable[[float, str], None]
 BENCHMARK_SEPARATOR = ":"
+DEFAULT_DATASET = "daily"
+RISK_FREE_FIELD = "rf"
 
 
 @functools.lru_cache(maxsize=1)
@@ -116,6 +120,93 @@ def parse_benchmark(benchmark: str, default_source: str) -> tuple[str, str]:
     return default_source, benchmark
 
 
+def parse_series_ref(ref: str, default_source: str, default_dataset: str) -> tuple[str, str, str]:
+    """``"source:dataset:SYMBOL"``, ``"source:SYMBOL"`` or ``"SYMBOL"`` -> the three parts."""
+    parts = ref.split(BENCHMARK_SEPARATOR)
+    if len(parts) == 3:
+        return parts[0], parts[1], parts[2]
+    if len(parts) == 2:
+        return parts[0], default_dataset, parts[1]
+    return default_source, default_dataset, ref
+
+
+def graft_series(data: MarketData, other: MarketData, instrument: str) -> MarketData:
+    """Add ``instrument`` from ``other`` (another source) to ``data`` on its bar grid.
+
+    Bars are matched by day, or by month when the two sources date monthly bars differently.
+    Only close and the ``ret`` field are carried over.
+    """
+    sub = other.select_instruments([instrument])
+    grid = data.timestamps
+    cols: dict[str, Any] = {
+        C.TIMESTAMP: pl_times(grid),
+        C.INSTRUMENT: instrument,
+        C.CLOSE: align_series(grid, sub.timestamps, sub.panel(C.CLOSE)[:, 0]),
+    }
+    if sub.has_field(C.RETURN):
+        cols[C.RETURN] = align_series(grid, sub.timestamps, sub.panel(C.RETURN)[:, 0])
+    frame = pl.DataFrame(cols).filter(pl.col(C.CLOSE).is_not_nan())
+    meta = {k: v for k, v in other.instrument_meta.items() if k == instrument}
+    return data.concat(MarketData(frame, data.frequency, meta))
+
+
+def splice_returns(
+    data: MarketData, target: str, other: MarketData, series: str, label: str | None = None
+) -> MarketData:
+    """Extend ``target`` back in time with the returns of ``series`` before its first price.
+
+    The target gets a ``ret`` value on every bar (its own total return where it has prices)
+    and a back-filled price path, so it is tradable over the whole window.
+    """
+    if target not in data.instruments:
+        raise ConfigError(f"Splice target '{target}' is not in the data")
+    grid = data.timestamps
+    sub = other.select_instruments([series])
+    proxy_ret = (
+        align_series(grid, sub.timestamps, sub.panel(C.RETURN)[:, 0])
+        if sub.has_field(C.RETURN)
+        else align_series(grid, sub.timestamps, _simple_returns(sub.panel(C.CLOSE)[:, 0]))
+    )
+    j = data.instruments.index(target)
+    own = compute_returns(data).close_to_close[:, j]
+    close = data.panel(C.CLOSE)[:, j]
+    valid = np.flatnonzero(np.isfinite(close))
+    if not len(valid):
+        raise ConfigError(f"Splice target '{target}' has no prices")
+    first = int(valid[0])
+    ret = own.copy()
+    ret[: first + 1] = proxy_ret[: first + 1]
+    ret[first] = own[first] if np.isfinite(own[first]) else proxy_ret[first]
+    level = close.copy()
+    for t in range(first, 0, -1):
+        step = ret[t]
+        level[t - 1] = (
+            level[t] / (1.0 + step) if np.isfinite(step) and np.isfinite(level[t]) else np.nan
+        )
+    frame = data.frame.filter(pl.col(C.INSTRUMENT) != target)
+    target_rows = pl.DataFrame(
+        {
+            C.TIMESTAMP: pl_times(grid),
+            C.INSTRUMENT: target,
+            C.CLOSE: level,
+            C.RETURN: ret,
+        }
+    ).filter(pl.col(C.CLOSE).is_not_nan())
+    merged = pl.concat([frame, target_rows], how="diagonal_relaxed").sort(
+        [C.TIMESTAMP, C.INSTRUMENT]
+    )
+    out = MarketData(merged, data.frequency, data.instrument_meta, data.metadata)
+    spliced = dict(data.metadata.get("splices", {}))
+    spliced[target] = {"series": label or series, "until": str(grid[first])[:10]}
+    return out.with_metadata(splices=spliced)
+
+
+def _simple_returns(close: FloatArray) -> FloatArray:
+    prev = np.concatenate(([np.nan], close[:-1]))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return close / prev - 1.0
+
+
 class BacktestRunner:
     """Orchestrates a backtest run.
 
@@ -166,40 +257,34 @@ class BacktestRunner:
         bench_id: str | None = None
         wanted = list(instruments)
         bench_source = bench_symbol = None
+        bench_dataset = DEFAULT_DATASET
+        foreign = False
         if config.benchmark:
-            bench_source, bench_symbol = parse_benchmark(config.benchmark, spec.source)
-            if bench_source == spec.source and bench_symbol not in wanted:
+            bench_source, bench_dataset, bench_symbol = parse_series_ref(
+                config.benchmark, spec.source, spec.dataset
+            )
+            if config.benchmark.count(BENCHMARK_SEPARATOR) == 1:
+                bench_dataset = spec.dataset if bench_source == spec.source else DEFAULT_DATASET
+            foreign = (bench_source, bench_dataset) != (spec.source, spec.dataset)
+            if not foreign and bench_symbol not in wanted:
                 wanted.append(bench_symbol)
         request = spec.to_request(wanted, universe=universe_code)
         data = self.data.fetch(request)
         refs["main"] = {"request": request.cache_key(), **_cache_ref(data)}
         if bench_symbol is not None:
             bench_id = bench_symbol
-            if bench_source != spec.source:
+            if foreign:
                 breq = spec.to_request([bench_symbol]).model_copy(
-                    update={"source": bench_source, "dataset": "daily"}
+                    update={"source": bench_source, "dataset": bench_dataset, "universe": None}
                 )
                 bdata = self.data.fetch(breq)
                 refs["benchmark"] = {"request": breq.cache_key(), **_cache_ref(bdata)}
-                keep = data.timestamps
-                bframe = bdata.frame.filter(
-                    pl.col(C.TIMESTAMP)
-                    .dt.date()
-                    .is_in(pl.Series(keep.astype("datetime64[D]")).to_list())
-                ).with_columns(
-                    pl.col(C.TIMESTAMP)
-                    .dt.date()
-                    .cast(pl.Datetime("us"))
-                    .dt.replace_time_zone("UTC")
-                )
-                data = data.concat(
-                    MarketData(
-                        bframe.select([c for c in bframe.columns if c in data.frame.columns]),
-                        data.frequency,
-                    )
-                )
+                if bench_symbol not in bdata.instruments:
+                    raise ConfigError(f"Benchmark '{bench_symbol}' not found in {bench_source}")
+                data = graft_series(data, bdata, bench_symbol)
             if bench_id not in data.instruments:
                 bench_id = None
+        data = self._splice(config, data, refs)
         data = self._join_extra(config, data, bench_id, refs)
         return data, bench_id, refs
 
@@ -232,16 +317,84 @@ class BacktestRunner:
             data = asof_join(data, extra)
         return derive_ratios(data)
 
+    def _fetch_series(
+        self, config: BacktestConfig, source: str, dataset: str, symbols: list[str]
+    ) -> tuple[MarketData, DataRequest]:
+        spec = config.data
+        request = DataRequest(
+            source=source,
+            dataset=dataset,
+            instruments=tuple(symbols),
+            start=spec.start,
+            end=spec.end,
+            frequency=spec.frequency,
+        )
+        return self.data.fetch(request), request
+
+    def _splice(self, config: BacktestConfig, data: MarketData, refs: dict[str, Any]) -> MarketData:
+        """Extend instruments back in time with proxy series (``data.splices``)."""
+        for entry in config.data.splices:
+            target, sep, ref = entry.partition("=")
+            if not sep:
+                raise ConfigError(f"Splice '{entry}' must be 'TARGET=source:dataset:SERIES'")
+            source, dataset, series = parse_series_ref(
+                ref.strip(), config.data.source, config.data.dataset
+            )
+            other, request = self._fetch_series(config, source, dataset, [series])
+            refs[f"splice:{entry}"] = {"request": request.cache_key(), **_cache_ref(other)}
+            if series not in other.instruments:
+                raise ConfigError(f"Splice series '{series}' not found in {source}:{dataset}")
+            data = splice_returns(data, target.strip(), other, series, label=ref.strip())
+        return data
+
+    def _load_risk_free(
+        self, config: BacktestConfig, data: MarketData, refs: dict[str, Any]
+    ) -> tuple[FloatArray | None, list[str]]:
+        """Per-bar risk-free returns on the data grid (``config.risk_free``)."""
+        if not config.risk_free:
+            return None, []
+        parts = config.risk_free.split(BENCHMARK_SEPARATOR)
+        if len(parts) not in (2, 3):
+            raise ConfigError("risk_free must be 'source:dataset[:field]'")
+        source, dataset = parts[0], parts[1]
+        field_name = parts[2] if len(parts) == 3 else RISK_FREE_FIELD
+        request = DataRequest(
+            source=source,
+            dataset=dataset,
+            start=config.data.start,
+            end=config.data.end,
+            frequency=config.data.frequency,
+        )
+        rf_data = self.data.fetch(request)
+        refs["risk_free"] = {"request": request.cache_key(), **_cache_ref(rf_data)}
+        if not rf_data.has_field(field_name):
+            raise ConfigError(
+                f"Risk-free dataset has no '{field_name}' field",
+                details={"fields": list(rf_data.fields)},
+            )
+        first = rf_data.select_instruments([rf_data.instruments[0]])
+        series = align_series(data.timestamps, first.timestamps, first.panel(field_name)[:, 0])
+        warnings = []
+        missing = int((~np.isfinite(series[1:])).sum())
+        if missing:
+            warnings.append(f"Risk-free series missing on {missing} bars (treated as 0)")
+        out = np.nan_to_num(series, nan=0.0)
+        if len(out):
+            out[0] = 0.0
+        return out, warnings
+
     def _load_factors(self, config: BacktestConfig, refs: dict[str, Any]) -> pl.DataFrame | None:
         """Daily factor returns (``timestamp`` + factor columns) for attribution."""
         if not config.factors:
             return None
         source, _, dataset = config.factors.partition(BENCHMARK_SEPARATOR)
+        monthly = config.data.frequency is Frequency.MO1
         request = DataRequest(
             source=source,
             dataset=dataset or "ff_factors",
             start=config.data.start,
             end=config.data.end,
+            frequency=Frequency.MO1 if monthly else Frequency.D1,
         )
         factors = self.data.fetch(request)
         refs["factors"] = {"request": request.cache_key(), **_cache_ref(factors)}
@@ -297,6 +450,10 @@ class BacktestRunner:
         universe_code = universe.request_universe()
 
         data, bench_id, refs = self._load_data(config, candidates, universe_code)
+        for target, info in data.metadata.get("splices", {}).items():
+            warnings.append(
+                f"{target}: returns up to {info['until']} come from {info['series']} (splice)"
+            )
         factors = self._load_factors(config, refs)
         data, locked = self._apply_split(config, data)
         if locked:
@@ -322,11 +479,14 @@ class BacktestRunner:
         if needs_bench and bench_id and bench_id not in strat_instruments:
             strat_instruments = (*strat_instruments, bench_id)
         membership = self._membership(universe, data, strat_instruments)
+        risk_free, rf_warnings = self._load_risk_free(config, data, refs)
+        warnings.extend(rf_warnings)
         options = RunOptions(
             periods_per_year=ppy,
             benchmark_id=bench_id,
             strategy_instruments=tuple(sorted(strat_instruments)),
             membership=membership,
+            extras={CASH_RETURNS_KEY: risk_free} if risk_free is not None else {},
         )
         return PreparedRun(
             config,
@@ -435,6 +595,7 @@ class BacktestRunner:
             membership=opts.membership,
             progress=progress,
             cancelled=cancelled,
+            extras=dict(opts.extras),
         )
         result = prepared.engine.run(
             config, prepared.data, prepared.strategy, prepared.pipeline, options

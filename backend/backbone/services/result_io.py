@@ -20,6 +20,7 @@ OVERLAYS: Final = "overlays.parquet"
 META: Final = "meta.json"
 COST_PREFIX: Final = "cost_"
 BENCH_COL: Final = "benchmark_returns"
+RF_COL: Final = "risk_free"
 
 
 def _wide(ts: TimeArray, instruments: tuple[str, ...], values: FloatArray) -> pl.DataFrame:
@@ -42,6 +43,8 @@ def save_result(result: BacktestResult, directory: Path) -> None:
     }
     if result.benchmark_returns is not None:
         series[BENCH_COL] = result.benchmark_returns
+    if result.risk_free is not None:
+        series[RF_COL] = result.risk_free
     for cat, values in result.costs.items():
         series[f"{COST_PREFIX}{cat}"] = values
     pl.DataFrame(series).write_parquet(directory / SERIES)
@@ -139,6 +142,7 @@ def load_result(directory: Path) -> BacktestResult:
             series.get_column(BENCH_COL).to_numpy() if BENCH_COL in series.columns else None
         ),
         benchmark_id=meta.get("benchmark_id"),
+        risk_free=series.get_column(RF_COL).to_numpy() if RF_COL in series.columns else None,
         trades=pl.read_parquet(directory / "trades.parquet"),
         orders=pl.read_parquet(directory / "orders.parquet"),
         fills=pl.read_parquet(directory / "fills.parquet"),
