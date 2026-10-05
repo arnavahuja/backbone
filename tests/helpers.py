@@ -78,3 +78,18 @@ def config(
         strategy=PluginRef(name=strategy, params=params or {}),
         execution=ExecutionSpec(**execution),
     )
+
+
+def with_required_fields(strategy: Any, data: MarketData, seed: int = 11) -> MarketData:
+    """Add random positive panels for fields a strategy requires but the data lacks."""
+    import numpy as np
+    import polars as pl
+
+    missing = [f for f in strategy.data_requirements().fields if not data.has_field(f)]
+    if not missing:
+        return data
+    rng = np.random.default_rng(seed)
+    frame = data.frame.with_columns(
+        [pl.Series(f, rng.uniform(0.1, 2.0, data.frame.height)) for f in missing]
+    )
+    return MarketData(frame, data.frequency, data.instrument_meta, data.metadata)

@@ -28,7 +28,7 @@ from backbone.core.types import TargetFrame, TargetKind
 from backbone.engine.base import RunOptions
 from backbone.engine.pipeline import Pipeline
 from backbone.engine.vectorized import VectorizedEngine
-from tests.helpers import PPY, config, synthetic
+from tests.helpers import PPY, config, synthetic, with_required_fields
 
 ALL_SPECS = [spec for reg in REGISTRIES.values() for spec in reg.specs()]
 DATA = synthetic(end=__import__("datetime").date(2019, 12, 31))
@@ -69,7 +69,7 @@ def test_strategies_run_on_fixture_data(spec):
     assert spec.capabilities, "strategies must declare capabilities"
     if not strat.implements_vectorized():
         pytest.skip("event-only strategy (covered by event engine tests)")
-    tf = strat.generate_targets(DATA)
+    tf = strat.generate_targets(with_required_fields(strat, DATA))
     assert tf.values.shape[0] == len(DATA.timestamps)
 
 

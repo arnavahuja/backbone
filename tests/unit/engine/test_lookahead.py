@@ -10,7 +10,7 @@ from backbone.core.interfaces import Strategy
 from backbone.core.registry import REGISTRIES, PluginKind
 from backbone.core.types import MarketData, TargetFrame
 from backbone.engine.lookahead import check_lookahead
-from tests.helpers import synthetic
+from tests.helpers import synthetic, with_required_fields
 
 DATA = synthetic(instruments=("AAA", "BBB", "CCC", "DDD", "EEE", "FFF"))
 SHIPPED = [s for s in REGISTRIES[PluginKind.STRATEGY].specs() if s.origin == "builtin"]
@@ -18,7 +18,8 @@ SHIPPED = [s for s in REGISTRIES[PluginKind.STRATEGY].specs() if s.origin == "bu
 
 @pytest.mark.parametrize("spec", SHIPPED, ids=lambda s: s.name)
 def test_shipped_strategy_has_no_lookahead(spec):
-    report = check_lookahead(spec.create(), DATA)
+    strategy = spec.create()
+    report = check_lookahead(strategy, with_required_fields(strategy, DATA))
     assert report.passed, report.mismatches
 
 
