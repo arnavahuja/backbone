@@ -39,8 +39,12 @@ _INTERVALS: Final = {
     Frequency.W1: "1wk",
     Frequency.MO1: "1mo",
 }
-_MAX_INTRADAY_DAYS: Final = {Frequency.MIN1: 30, Frequency.MIN5: 60, Frequency.MIN15: 60,
-                             Frequency.H1: 730}
+_MAX_INTRADAY_DAYS: Final = {
+    Frequency.MIN1: 30,
+    Frequency.MIN5: 60,
+    Frequency.MIN15: 60,
+    Frequency.H1: 730,
+}
 _RENAME: Final = {
     "Date": C.TIMESTAMP,
     "Datetime": C.TIMESTAMP,
@@ -64,9 +68,7 @@ def yahoo_to_canonical(frame: pd.DataFrame, ticker: str) -> pl.DataFrame:
     keep = [c for c in pdf.columns if c in _RENAME.values()]
     pdf = pdf[keep].dropna(subset=[C.CLOSE])
     ts = pd.to_datetime(pdf[C.TIMESTAMP])
-    pdf[C.TIMESTAMP] = (
-        ts.dt.tz_convert("UTC") if ts.dt.tz is not None else ts.dt.tz_localize("UTC")
-    )
+    pdf[C.TIMESTAMP] = ts.dt.tz_convert("UTC") if ts.dt.tz is not None else ts.dt.tz_localize("UTC")
     out = pl.from_pandas(pdf).with_columns(pl.lit(ticker).alias(C.INSTRUMENT))
     return out
 
@@ -117,7 +119,7 @@ class YahooSource(DataSource):
             import yfinance as yf
 
             quotes: list[dict[str, Any]] = yf.Search(query, max_results=_SEARCH_LIMIT).quotes
-        except Exception:  # noqa: BLE001 - network/library errors degrade to an echo
+        except Exception:
             quotes = []
         out = []
         for q in quotes:
@@ -125,11 +127,20 @@ class YahooSource(DataSource):
             if not symbol:
                 continue
             kind = str(q.get("quoteType", "")).lower()
-            asset = AssetClass.ETF if kind == "etf" else (
-                AssetClass.INDEX if kind == "index" else AssetClass.EQUITY)
-            out.append(Instrument(id=symbol, symbol=symbol, asset_class=asset,
-                                  exchange=q.get("exchange"),
-                                  name=q.get("shortname") or q.get("longname")))
+            asset = (
+                AssetClass.ETF
+                if kind == "etf"
+                else (AssetClass.INDEX if kind == "index" else AssetClass.EQUITY)
+            )
+            out.append(
+                Instrument(
+                    id=symbol,
+                    symbol=symbol,
+                    asset_class=asset,
+                    exchange=q.get("exchange"),
+                    name=q.get("shortname") or q.get("longname"),
+                )
+            )
         if not out and query.strip():
             sym = query.strip().upper()
             out.append(Instrument(id=sym, symbol=sym))
@@ -194,6 +205,10 @@ class YahooSource(DataSource):
             frame,
             request.frequency,
             instruments,
-            metadata={"source": "yahoo", "adjustment": request.adjustment.value,
-                      "survivorship_bias_free": False, "quality": "lower"},
+            metadata={
+                "source": "yahoo",
+                "adjustment": request.adjustment.value,
+                "survivorship_bias_free": False,
+                "quality": "lower",
+            },
         )

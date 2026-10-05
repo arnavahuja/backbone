@@ -17,15 +17,33 @@ from backbone.core.errors import DataError, DataValidationError
 from backbone.core.types import Adjustment, Frequency
 from backbone.data.normalize import normalize_frame
 
-SUPPORTED_SUFFIXES: Final = (".csv", ".txt", ".parquet", ".pq", ".xlsx", ".xls", ".feather",
-                             ".arrow", ".ipc")
+SUPPORTED_SUFFIXES: Final = (
+    ".csv",
+    ".txt",
+    ".parquet",
+    ".pq",
+    ".xlsx",
+    ".xls",
+    ".feather",
+    ".arrow",
+    ".ipc",
+)
 PREVIEW_ROWS: Final = 20
 INFER_ROWS: Final = 10_000
 
 _CANDIDATES: Final[dict[str, tuple[str, ...]]] = {
     C.TIMESTAMP: ("timestamp", "datetime", "date", "time", "dt", "day", "trade_date"),
-    C.SYMBOL: ("symbol", "ticker", "instrument", "instrument_id", "permno", "asset", "code",
-               "secid", "name"),
+    C.SYMBOL: (
+        "symbol",
+        "ticker",
+        "instrument",
+        "instrument_id",
+        "permno",
+        "asset",
+        "code",
+        "secid",
+        "name",
+    ),
     C.OPEN: ("open", "o", "open_price", "opening"),
     C.HIGH: ("high", "h", "high_price"),
     C.LOW: ("low", "l", "low_price"),
@@ -73,11 +91,13 @@ def read_any(path: Path, n_rows: int | None = None) -> pl.DataFrame:
     """Read CSV, Parquet, Excel or Feather into polars."""
     suffix = path.suffix.lower()
     if suffix not in SUPPORTED_SUFFIXES:
-        raise DataError(f"Unsupported file type '{suffix}'", details={
-            "supported": list(SUPPORTED_SUFFIXES)})
+        raise DataError(
+            f"Unsupported file type '{suffix}'", details={"supported": list(SUPPORTED_SUFFIXES)}
+        )
     if suffix in (".csv", ".txt"):
-        return pl.read_csv(path, n_rows=n_rows, infer_schema_length=INFER_ROWS,
-                           try_parse_dates=True)
+        return pl.read_csv(
+            path, n_rows=n_rows, infer_schema_length=INFER_ROWS, try_parse_dates=True
+        )
     if suffix in (".parquet", ".pq"):
         frame = pl.read_parquet(path)
     elif suffix in (".xlsx", ".xls"):

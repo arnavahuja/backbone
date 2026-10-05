@@ -149,7 +149,7 @@ def check_prices(frame: pl.DataFrame) -> list[QualityIssue]:
 
 def check_jumps(data: MarketData, threshold: float = EXTREME_JUMP_THRESHOLD) -> list[QualityIssue]:
     """Close-to-close moves larger than ``threshold`` in absolute value."""
-    if not data.has_field(C.CLOSE) or len(data.timestamps) < 2:  # noqa: PLR2004
+    if not data.has_field(C.CLOSE) or len(data.timestamps) < 2:
         return []
     close = data.panel(C.CLOSE)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -176,9 +176,7 @@ def check_calendar_gaps(data: MarketData, calendar: TradingCalendar) -> list[Qua
     if data.frequency is not Frequency.D1 or data.is_empty():
         return []
     issues: list[QualityIssue] = []
-    per_inst = data.frame.group_by(C.INSTRUMENT).agg(
-        pl.col(C.TIMESTAMP).dt.date().alias("dates")
-    )
+    per_inst = data.frame.group_by(C.INSTRUMENT).agg(pl.col(C.TIMESTAMP).dt.date().alias("dates"))
     for inst, dates in per_inst.iter_rows():
         present: set[date] = set(dates)
         sessions = calendar.sessions(min(present), max(present))

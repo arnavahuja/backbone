@@ -111,9 +111,7 @@ class Catalog:
         for suffix in (RECORD_SUFFIX, QUALITY_SUFFIX):
             self._path(dataset_id, suffix).unlink(missing_ok=True)
 
-    def records(
-        self, source: str | None = None, kind: str | None = None
-    ) -> list[DatasetRecord]:
+    def records(self, source: str | None = None, kind: str | None = None) -> list[DatasetRecord]:
         """All records, newest refresh first, optionally filtered, via DuckDB."""
         files = [p for p in self.root.glob(f"*{RECORD_SUFFIX}") if QUALITY_SUFFIX not in p.name]
         if not files:

@@ -152,9 +152,7 @@ class ParquetCache:
             gaps.append(MissingRange(latest.end + timedelta(days=1), request.end))
         return gaps
 
-    def load(
-        self, request: DataRequest, version: int | None = None
-    ) -> CacheHit | None:
+    def load(self, request: DataRequest, version: int | None = None) -> CacheHit | None:
         """Load the cached data for a request (sliced to its dates) or ``None``."""
         key = request.key_without_dates()
         versions = self.versions(key)
@@ -173,8 +171,11 @@ class ParquetCache:
             frame,
             Frequency(meta.get("frequency", request.frequency.value)),
             instruments,
-            metadata={**meta.get("data_metadata", {}), "cache_key": key,
-                      "cache_version": chosen.ref},
+            metadata={
+                **meta.get("data_metadata", {}),
+                "cache_key": key,
+                "cache_version": chosen.ref,
+            },
         ).between(request.start, request.end)
         return CacheHit(key, chosen, data)
 

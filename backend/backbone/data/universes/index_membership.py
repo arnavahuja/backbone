@@ -20,8 +20,12 @@ class IndexParams(UniverseParams):
     field: str = Field("universe_member", description="Membership flag field in the data")
 
 
-@register("universe", name="index_membership", version="1.0.0",
-          tags=["point-in-time", "survivorship-free"])
+@register(
+    "universe",
+    name="index_membership",
+    version="1.0.0",
+    tags=["point-in-time", "survivorship-free"],
+)
 class IndexMembership(UniverseProvider):
     """Members of an index on each date, using the source's historical membership lists.
 
@@ -39,7 +43,9 @@ class IndexMembership(UniverseProvider):
     def membership(self, data: MarketData) -> FloatArray:
         """Membership flag (and a price) at each bar."""
         if not data.has_field(self.params.field):
-            raise DataError(f"The data has no '{self.params.field}' field; use a source that "
-                            f"provides the '{self.params.index}' universe")
+            raise DataError(
+                f"The data has no '{self.params.field}' field; use a source that "
+                f"provides the '{self.params.index}' universe"
+            )
         flag = np.nan_to_num(data.panel(self.params.field), nan=0.0)
         return ((flag > 0) & np.isfinite(data.panel(C.CLOSE))).astype(np.float64)

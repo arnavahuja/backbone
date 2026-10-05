@@ -12,8 +12,9 @@ from backbone.data.sources.synthetic import SyntheticSource
 
 
 def _req(start=date(2021, 1, 1), end=date(2021, 6, 30)) -> DataRequest:
-    return DataRequest(source="synthetic", dataset="gbm", instruments=("AAA", "BBB"),
-                       start=start, end=end)
+    return DataRequest(
+        source="synthetic", dataset="gbm", instruments=("AAA", "BBB"), start=start, end=end
+    )
 
 
 @pytest.fixture
@@ -90,8 +91,11 @@ def test_import_wizard_roundtrip(data_service, tmp_path):
     quality = data_service.catalog.quality(record.id)
     checks = {i.check for i in quality.issues}
     assert {"duplicates", "non_positive_price", "monotonic"} <= checks
-    data = data_service.fetch(DataRequest(source="local_file", dataset=record.id,
-                                          start=date(2021, 1, 1), end=date(2021, 12, 31)))
+    data = data_service.fetch(
+        DataRequest(
+            source="local_file", dataset=record.id, start=date(2021, 1, 1), end=date(2021, 12, 31)
+        )
+    )
     assert data.has_field("my_signal")
     assert data.frequency is Frequency.D1
     assert len(data) == 5  # duplicate removed

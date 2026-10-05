@@ -8,13 +8,23 @@ from backbone.core import columns as C
 from backbone.core.errors import DataValidationError
 from backbone.core.types import UTC_DTYPE
 
-NUMERIC_TYPES = (pl.Float32, pl.Float64, pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.UInt8,
-                 pl.UInt16, pl.UInt32, pl.UInt64, pl.Decimal, pl.Boolean)
+NUMERIC_TYPES = (
+    pl.Float32,
+    pl.Float64,
+    pl.Int8,
+    pl.Int16,
+    pl.Int32,
+    pl.Int64,
+    pl.UInt8,
+    pl.UInt16,
+    pl.UInt32,
+    pl.UInt64,
+    pl.Decimal,
+    pl.Boolean,
+)
 
 
-def normalize_frame(
-    frame: pl.DataFrame, *, dedupe: bool = True, sort: bool = True
-) -> pl.DataFrame:
+def normalize_frame(frame: pl.DataFrame, *, dedupe: bool = True, sort: bool = True) -> pl.DataFrame:
     """Cast key columns, make numeric fields ``Float64``, sort and de-duplicate.
 
     Non-numeric extra columns (e.g. sector labels) are kept as strings.
@@ -34,8 +44,7 @@ def normalize_frame(
         )
     else:
         ts_expr = pl.col(C.TIMESTAMP).cast(pl.Datetime("us")).dt.replace_time_zone("UTC")
-    exprs = [ts_expr.cast(UTC_DTYPE).alias(C.TIMESTAMP),
-             pl.col(C.INSTRUMENT).cast(pl.String)]
+    exprs = [ts_expr.cast(UTC_DTYPE).alias(C.TIMESTAMP), pl.col(C.INSTRUMENT).cast(pl.String)]
     for name, dtype in frame.schema.items():
         if name in C.KEY_COLUMNS:
             continue

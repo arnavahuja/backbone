@@ -32,9 +32,9 @@ def future_split_factor(frame: pl.DataFrame) -> pl.Series:
     if C.SPLIT not in frame.columns:
         return pl.Series("f", [1.0] * frame.height)
     out = frame.sort(C.KEY_COLUMNS).with_columns(
-        (
-            _ratio_expr().reverse().cum_prod().reverse().over(C.INSTRUMENT) / _ratio_expr()
-        ).alias("_f")
+        (_ratio_expr().reverse().cum_prod().reverse().over(C.INSTRUMENT) / _ratio_expr()).alias(
+            "_f"
+        )
     )
     return out.get_column("_f")
 
@@ -64,8 +64,9 @@ def dividend_factor(frame: pl.DataFrame) -> pl.Series:
         .alias("_step")
     )
     out = out.with_columns(
-        (pl.col("_step").reverse().cum_prod().reverse().over(C.INSTRUMENT) / pl.col("_step"))
-        .alias("_f")
+        (pl.col("_step").reverse().cum_prod().reverse().over(C.INSTRUMENT) / pl.col("_step")).alias(
+            "_f"
+        )
     )
     return out.get_column("_f")
 

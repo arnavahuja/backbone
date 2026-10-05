@@ -90,7 +90,10 @@ class LocalFileSource(DataSource):
         data = MarketData(
             frame,
             Frequency(mapping.get("frequency", request.frequency.value)),
-            metadata={"source": "local_file", "dataset": request.dataset,
-                      "adjustment": request.adjustment.value},
+            metadata={
+                "source": "local_file",
+                "dataset": request.dataset,
+                "adjustment": request.adjustment.value,
+            },
         )
         return data.between(request.start, request.end)

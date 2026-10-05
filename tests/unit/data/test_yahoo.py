@@ -21,8 +21,14 @@ def yahoo(monkeypatch) -> YahooSource:
 
 
 def _req(adj: Adjustment) -> DataRequest:
-    return DataRequest(source="yahoo", dataset="daily", instruments=("AAPL", "SPY"),
-                       start=date(2020, 6, 1), end=date(2020, 9, 29), adjustment=adj)
+    return DataRequest(
+        source="yahoo",
+        dataset="daily",
+        instruments=("AAPL", "SPY"),
+        start=date(2020, 6, 1),
+        end=date(2020, 9, 29),
+        adjustment=adj,
+    )
 
 
 def test_fetch_maps_to_canonical(yahoo):
@@ -53,14 +59,22 @@ def test_requires_tickers():
     from backbone.core.errors import DataError
 
     with pytest.raises(DataError):
-        YahooSource().fetch(DataRequest(source="yahoo", dataset="daily",
-                                        start=date(2020, 1, 1), end=date(2020, 2, 1)))
+        YahooSource().fetch(
+            DataRequest(
+                source="yahoo", dataset="daily", start=date(2020, 1, 1), end=date(2020, 2, 1)
+            )
+        )
 
 
 @pytest.mark.live
 def test_live_yahoo_download():
     data = YahooSource().fetch(
-        DataRequest(source="yahoo", dataset="daily", instruments=("SPY",),
-                    start=date(2023, 1, 1), end=date(2023, 3, 1))
+        DataRequest(
+            source="yahoo",
+            dataset="daily",
+            instruments=("SPY",),
+            start=date(2023, 1, 1),
+            end=date(2023, 3, 1),
+        )
     )
     assert len(data.timestamps) > 30

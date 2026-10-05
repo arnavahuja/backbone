@@ -96,10 +96,17 @@ class DataService:
                 src = self.source(spec.name)
                 ok, reason = src.available()
                 datasets = [d.model_dump(mode="json") for d in src.describe()] if ok else []
-            except Exception as exc:  # noqa: BLE001 - one broken source must not hide others
+            except Exception as exc:
                 ok, reason, datasets = False, str(exc), []
-            out.append({"name": spec.name, "description": spec.description,
-                        "available": ok, "reason": reason, "datasets": datasets})
+            out.append(
+                {
+                    "name": spec.name,
+                    "description": spec.description,
+                    "available": ok,
+                    "reason": reason,
+                    "datasets": datasets,
+                }
+            )
         return out
 
     def search_instruments(self, source: str, query: str) -> list[dict[str, Any]]:
@@ -148,16 +155,25 @@ class DataService:
         else:
             full_req = request.model_copy(update={"start": latest.start, "end": latest.end})
             existing = self.cache.load(full_req)
-            full = existing.data if existing else MarketData(pl.DataFrame(
-                {C.TIMESTAMP: [], C.INSTRUMENT: []}), request.frequency)
+            full = (
+                existing.data
+                if existing
+                else MarketData(
+                    pl.DataFrame({C.TIMESTAMP: [], C.INSTRUMENT: []}), request.frequency
+                )
+            )
             for gap in gaps:
                 part = src.fetch(request.model_copy(update={"start": gap.start, "end": gap.end}))
                 full = part if full.is_empty() else full.concat(part)
             covered = (min(request.start, latest.start), max(request.end, latest.end))
-            log.info("cache_extended", key=request.key_without_dates(),
-                     gaps=[(g.start.isoformat(), g.end.isoformat()) for g in gaps])
-        full = MarketData(normalize_frame(full.frame), full.frequency, full.instrument_meta,
-                          full.metadata)
+            log.info(
+                "cache_extended",
+                key=request.key_without_dates(),
+                gaps=[(g.start.isoformat(), g.end.isoformat()) for g in gaps],
+            )
+        full = MarketData(
+            normalize_frame(full.frame), full.frequency, full.instrument_meta, full.metadata
+        )
         version = self.cache.store(request, full, src.source_version, covered)
         report = validate(full, self.calendar)
         self._register_cache(request, full, covered, version.ref, report)
@@ -183,7 +199,7 @@ class DataService:
             source=request.source,
             dataset=request.dataset,
             name=f"{request.source}:{request.dataset} {','.join(data.instruments[:5])}"
-            + ("…" if len(data.instruments) > 5 else ""),  # noqa: PLR2004
+            + ("…" if len(data.instruments) > 5 else ""),
             frequency=request.frequency.value,
             start=covered[0].isoformat(),
             end=covered[1].isoformat(),

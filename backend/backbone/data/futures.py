@@ -129,12 +129,15 @@ def contract_panel(data: MarketData, root: str) -> ContractPanel:
 
     close = field(C.CLOSE)
     return ContractPanel(
-        timestamps=sub.timestamps, contracts=tuple(ids),
-        expiries=tuple(meta[i].expiry or date.max for i in ids), close=close,
+        timestamps=sub.timestamps,
+        contracts=tuple(ids),
+        expiries=tuple(meta[i].expiry or date.max for i in ids),
+        close=close,
         open=np.where(np.isfinite(field(C.OPEN)), field(C.OPEN), close),
         high=np.where(np.isfinite(field(C.HIGH)), field(C.HIGH), close),
         low=np.where(np.isfinite(field(C.LOW)), field(C.LOW), close),
-        volume=field(C.VOLUME), open_interest=field(OPEN_INTEREST),
+        volume=field(C.VOLUME),
+        open_interest=field(OPEN_INTEREST),
     )
 
 
@@ -160,8 +163,12 @@ def build_continuous(
     def pick(arr: FloatArray) -> FloatArray:
         return arr[rows, active]
 
-    close, open_, high, low = (pick(panel.close), pick(panel.open), pick(panel.high),
-                               pick(panel.low))
+    close, open_, high, low = (
+        pick(panel.close),
+        pick(panel.open),
+        pick(panel.high),
+        pick(panel.low),
+    )
     # On a roll bar the holder earns the old contract's return, then switches. Rescale history
     # before the roll by new/old (ratio) or shift it by new - old (difference).
     old_close = panel.close[rows, np.concatenate(([active[0]], active[:-1]))]
@@ -176,26 +183,45 @@ def build_continuous(
         step = np.where(rolls & np.isfinite(old_close), close - old_close, 0.0)
         offset = np.concatenate((np.cumsum(step[::-1])[::-1][1:], [0.0]))
         close, open_, high, low = (x + offset for x in (close, open_, high, low))
-    frame = pl.DataFrame({
-        C.TIMESTAMP: pl_times(panel.timestamps),
-        C.INSTRUMENT: [root] * len(rows),
-        C.OPEN: open_, C.HIGH: high, C.LOW: low, C.CLOSE: close,
-        C.VOLUME: pick(panel.volume),
-        ROLL_FIELD: rolls.astype(np.float64),
-        ACTIVE_FIELD: [panel.contracts[k] for k in active],
-    }).filter(pl.col(C.CLOSE).is_not_nan() & pl.col(C.CLOSE).is_not_null())
+    frame = pl.DataFrame(
+        {
+            C.TIMESTAMP: pl_times(panel.timestamps),
+            C.INSTRUMENT: [root] * len(rows),
+            C.OPEN: open_,
+            C.HIGH: high,
+            C.LOW: low,
+            C.CLOSE: close,
+            C.VOLUME: pick(panel.volume),
+            ROLL_FIELD: rolls.astype(np.float64),
+            ACTIVE_FIELD: [panel.contracts[k] for k in active],
+        }
+    ).filter(pl.col(C.CLOSE).is_not_nan() & pl.col(C.CLOSE).is_not_null())
     first = data.instrument_meta[panel.contracts[0]]
-    inst = Instrument(id=root, symbol=root, asset_class=AssetClass.FUTURE,
-                      multiplier=first.multiplier, currency=first.currency,
-                      exchange=first.exchange, root=root)
-    return MarketData(frame, data.frequency, {root: inst}, metadata={
-        **data.metadata, "continuous": True, "roll_rule": rule if isinstance(rule, str)
-        else getattr(rule, "__name__", "custom"), "back_adjust": adjust.value,
-    })
+    inst = Instrument(
+        id=root,
+        symbol=root,
+        asset_class=AssetClass.FUTURE,
+        multiplier=first.multiplier,
+        currency=first.currency,
+        exchange=first.exchange,
+        root=root,
+    )
+    return MarketData(
+        frame,
+        data.frequency,
+        {root: inst},
+        metadata={
+            **data.metadata,
+            "continuous": True,
+            "roll_rule": rule if isinstance(rule, str) else getattr(rule, "__name__", "custom"),
+            "back_adjust": adjust.value,
+        },
+    )
 
 
-def continuous_many(data: MarketData, rule: str, days_before: int,
-                    adjust: BackAdjust) -> MarketData:
+def continuous_many(
+    data: MarketData, rule: str, days_before: int, adjust: BackAdjust
+) -> MarketData:
     """Continuous series for every root present in the instrument metadata."""
     roots = sorted({m.root for m in data.instrument_meta.values() if m.root})
     if not roots:
@@ -208,4 +234,3 @@ def continuous_many(data: MarketData, rule: str, days_before: int,
         out = series if out is None else out.concat(series)
     assert out is not None
     return MarketData(out.frame, out.frequency, meta, out.metadata)
-

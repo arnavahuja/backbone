@@ -13,9 +13,15 @@ from backbone.data.sources.synthetic_markets import SyntheticMarkets
 from backbone.data.sources.wrds_crsp import taq_sql, taq_to_canonical
 
 SRC = SyntheticMarkets()
-CONTRACTS = SRC.fetch(DataRequest(source="synthetic_markets", dataset="futures_contracts",
-                                  instruments=("ES",), start=date(2018, 1, 1),
-                                  end=date(2020, 12, 31)))
+CONTRACTS = SRC.fetch(
+    DataRequest(
+        source="synthetic_markets",
+        dataset="futures_contracts",
+        instruments=("ES",),
+        start=date(2018, 1, 1),
+        end=date(2020, 12, 31),
+    )
+)
 
 
 def _active_returns(cont):
@@ -44,8 +50,9 @@ def test_ratio_back_adjusted_returns_have_no_roll_gaps(rule):
 def test_fixed_days_roll_happens_before_expiry():
     cont = build_continuous(CONTRACTS, "ES", "fixed_days", 7, BackAdjust.NONE)
     meta = CONTRACTS.instrument_meta
-    for ts, contract in zip(cont.timestamps, cont.frame.get_column(ACTIVE_FIELD).to_list(),
-                            strict=True):
+    for ts, contract in zip(
+        cont.timestamps, cont.frame.get_column(ACTIVE_FIELD).to_list(), strict=True
+    ):
         expiry = np.datetime64(meta[contract].expiry)
         assert ts.astype("datetime64[D]") < expiry - np.timedelta64(7, "D")
 
@@ -60,9 +67,17 @@ def test_difference_adjustment_keeps_point_moves():
 
 
 def test_taq_bars_are_converted_to_utc():
-    rows = pd.DataFrame({"sym_root": ["AAPL", "AAPL"], "bucket": [34200 / 300, 34500 / 300],
-                         "open": [10.0, 11.0], "high": [11.0, 12.0], "low": [9.0, 10.5],
-                         "close": [10.5, 11.5], "volume": [100, 200]})
+    rows = pd.DataFrame(
+        {
+            "sym_root": ["AAPL", "AAPL"],
+            "bucket": [34200 / 300, 34500 / 300],
+            "open": [10.0, 11.0],
+            "high": [11.0, 12.0],
+            "low": [9.0, 10.5],
+            "close": [10.5, 11.5],
+            "volume": [100, 200],
+        }
+    )
     frame = taq_to_canonical(rows, date(2020, 1, 2), 5)
     assert str(frame.get_column(C.TIMESTAMP)[0]) == "2020-01-02 14:30:00+00:00"
     assert "taqm_2020.ctm_20200102" in taq_sql(date(2020, 1, 2), 5)

@@ -149,8 +149,12 @@ class SyntheticSource(DataSource):
             frame,
             Frequency.D1,
             {i: Instrument(id=i, symbol=i) for i in request.instruments},
-            metadata={"source": "synthetic", "adjustment": request.adjustment.value,
-                      "survivorship_bias_free": True, "quality": "synthetic"},
+            metadata={
+                "source": "synthetic",
+                "adjustment": request.adjustment.value,
+                "survivorship_bias_free": True,
+                "quality": "synthetic",
+            },
         )
 
     def _factors(self, request: DataRequest) -> MarketData:
@@ -172,7 +176,13 @@ class SyntheticSource(DataSource):
             if name not in cols:
                 cols[name] = SMALL_FACTOR_VOL * np.sqrt(dt) * rng.standard_normal(n)
         frame = normalize_frame(pl.DataFrame(cols))
-        return MarketData(frame, Frequency.D1,
-                          {FACTORS_ID: Instrument(id=FACTORS_ID, symbol=FACTORS_ID,
-                                                  asset_class=AssetClass.OTHER)},
-                          metadata={"source": "synthetic", "dataset": "ff_factors"})
+        return MarketData(
+            frame,
+            Frequency.D1,
+            {
+                FACTORS_ID: Instrument(
+                    id=FACTORS_ID, symbol=FACTORS_ID, asset_class=AssetClass.OTHER
+                )
+            },
+            metadata={"source": "synthetic", "dataset": "ff_factors"},
+        )

@@ -26,8 +26,12 @@ def source(fake, monkeypatch, tmp_path: Path) -> WrdsSource:
 
 
 def _req(dataset="crsp_daily", **kw) -> DataRequest:
-    base = {"source": "wrds", "dataset": dataset, "start": date(2018, 1, 1),
-            "end": date(2020, 12, 31)}
+    base = {
+        "source": "wrds",
+        "dataset": dataset,
+        "start": date(2018, 1, 1),
+        "end": date(2020, 12, 31),
+    }
     return DataRequest(**{**base, **kw})
 
 
@@ -90,8 +94,9 @@ def test_live_wrds_crsp(tmp_path):
     """Opt-in: needs WRDS_USERNAME and ~/.pgpass (pytest -m live)."""
     import os
 
-    src = WrdsSource(env=SourceEnvironment(tmp_path, tmp_path,
-                                           wrds_username=os.environ.get("WRDS_USERNAME")))
+    src = WrdsSource(
+        env=SourceEnvironment(tmp_path, tmp_path, wrds_username=os.environ.get("WRDS_USERNAME"))
+    )
     ok, reason = src.available()
     if not ok:
         pytest.skip(reason)
