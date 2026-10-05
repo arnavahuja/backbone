@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi.responses import Response
 
 from backbone.api.deps import ServicesDep
 from backbone.api.schemas import (
@@ -17,6 +18,7 @@ from backbone.api.schemas import (
 )
 from backbone.core.errors import ConfigError
 from backbone.core.specs import ChartSpec
+from backbone.services.report import ReportBuilder, ReportRequest
 
 router = APIRouter(prefix="/compare", tags=["compare"])
 
@@ -51,3 +53,19 @@ def compare_chart(chart: str, body: CompareChartRequest, services: ServicesDep) 
 def combine(body: CombineRequest, services: ServicesDep) -> dict[str, Any]:
     """Combine runs into a fixed-weight portfolio and report the correlation benefit."""
     return services.results.combine(body.run_ids, body.weights)
+
+
+@router.post(
+    "/report",
+    response_class=Response,
+    responses={200: {"content": {"application/zip": {}}, "description": "Report zip"}},
+)
+def compare_report(body: ReportRequest, services: ServicesDep) -> Response:
+    """CSV tables and PNG charts comparing the selected runs (zip)."""
+    builder = ReportBuilder(services.store, services.results, services.runner)
+    content = builder.build(body)
+    return Response(
+        content=content,
+        media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="comparison-report.zip"'},
+    )
